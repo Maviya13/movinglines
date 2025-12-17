@@ -15,17 +15,22 @@ CRITICAL RULES:
 7. Add appropriate wait times between animations
 8. Use modern Manim syntax (manim community edition)
 9. NEVER use external files like images (ImageMobject), SVGs, or audio files
-10. ONLY use built-in Manim shapes: Circle, Square, Rectangle, Triangle, Line, Arrow, Dot, Text, MathTex, etc.
+10. ONLY use built-in Manim shapes: Circle, Square, Rectangle, Triangle, Line, Arrow, Dot, Text, etc.
 11. Create visual representations using geometric shapes and text only
 12. Use colors like RED, BLUE, GREEN, YELLOW, PURPLE, ORANGE, WHITE, GOLD, TEAL, PINK
+13. NEVER use MathTex or Tex - use Text() instead for all labels and text
+14. For mathematical expressions, write them as plain text strings with Text()
 
 Example structure:
 from manim import *
 
 class GeneratedScene(Scene):
     def construct(self):
-        # Your animation code here using only built-in shapes
-        pass
+        title = Text("Hello World", font_size=48)
+        circle = Circle(color=BLUE)
+        self.play(Write(title))
+        self.play(Create(circle))
+        self.wait()
 
 User request: {prompt}
 
