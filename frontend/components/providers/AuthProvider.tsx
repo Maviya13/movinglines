@@ -20,6 +20,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const syncUserToDatabase = async () => {
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      
+      if (!response.ok) {
+        console.error('Failed to sync user to database')
+      }
+    } catch (error) {
+      console.error('Error syncing user:', error)
+    }
+  }
+
   useEffect(() => {
     let mounted = true
 
@@ -32,6 +47,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) {
           setSession(session)
           setUser(session?.user ?? null)
+          
+          // Sync user to database if logged in
+          if (session?.user) {
+            await syncUserToDatabase()
+          }
         }
       } catch (error) {
         console.error('Auth initialization error:', error)
@@ -42,10 +62,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
       if (mounted) {
         setSession(session)
         setUser(session?.user ?? null)
+        
+        // Sync user to database on auth state change
+        if (session?.user) {
+          await syncUserToDatabase()
+        }
       }
     })
 

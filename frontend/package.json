@@ -14,8 +14,9 @@
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.47.0",
+    "@supabase/supabase-js": "^2.89.0",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "framer-motion": "^11.15.0",
     "lucide-react": "^0.468.0",

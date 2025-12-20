@@ -1,25 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/components/providers/AuthProvider'
-import { getUserVideos } from '@/lib/api'
-import { Video } from '@/lib/supabase'
+import { getVideos } from '@/lib/api'
+import type { Video as DbVideo } from '@/lib/db/schema'
 import { motion } from 'framer-motion'
 import { Play, Download, Calendar } from 'lucide-react'
 
 export function VideoGallery() {
-  const { session } = useAuth()
-  const [videos, setVideos] = useState<Video[]>([])
+  const [videos, setVideos] = useState<DbVideo[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
+  const [selectedVideo, setSelectedVideo] = useState<DbVideo | null>(null)
 
   useEffect(() => {
-    if (!session?.access_token) return
-
     const fetchVideos = async () => {
       try {
-        const data = await getUserVideos(session.access_token)
-        setVideos(data)
+        const { videos } = await getVideos(1000, 0)
+        setVideos(videos)
       } catch (err) {
         console.error('Failed to fetch videos:', err)
       } finally {
@@ -28,7 +24,7 @@ export function VideoGallery() {
     }
 
     fetchVideos()
-  }, [session?.access_token])
+  }, [])
 
   if (loading) {
     return (
@@ -64,7 +60,7 @@ export function VideoGallery() {
           >
             <div className="aspect-video bg-dark-800 relative">
               <video
-                src={video.video_url}
+                src={video.videoUrl}
                 className="w-full h-full object-cover"
                 muted
                 playsInline
@@ -86,7 +82,7 @@ export function VideoGallery() {
               </p>
               <div className="flex items-center gap-2 text-xs text-dark-500">
                 <Calendar className="w-3 h-3" />
-                {new Date(video.created_at).toLocaleDateString()}
+                {new Date(video.createdAt!).toLocaleDateString()}
               </div>
             </div>
           </motion.div>
@@ -109,7 +105,7 @@ export function VideoGallery() {
             onClick={(e) => e.stopPropagation()}
           >
             <video
-              src={selectedVideo.video_url}
+              src={selectedVideo.videoUrl}
               controls
               autoPlay
               className="w-full rounded-2xl"
@@ -117,7 +113,7 @@ export function VideoGallery() {
             <div className="mt-4 flex items-center justify-between">
               <p className="text-dark-300">{selectedVideo.prompt}</p>
               <a
-                href={selectedVideo.video_url}
+                href={selectedVideo.videoUrl}
                 download
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-dark-800 hover:bg-dark-700 transition-colors"
               >

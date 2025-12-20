@@ -14,13 +14,13 @@ def get_supabase() -> Client:
     global _supabase_client
     if _supabase_client is None:
         url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+        key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
         print(f"[Supabase] URL: {url[:30] if url else None}...")
-        print(f"[Supabase] Key: {key[:20] if key else None}...")
+        print(f"[Supabase] Using key starting with: {key[:5] if key else None}...") # Log key prefix for debugging
         if url and key:
             _supabase_client = create_client(url, key)
         else:
-            raise ValueError("SUPABASE_URL and SUPABASE_KEY/SUPABASE_ANON_KEY must be set")
+            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or ANON_KEY) must be set")
     return _supabase_client
 
 async def get_current_user(authorization: str = Header(None)) -> str:
@@ -42,10 +42,40 @@ async def get_current_user(authorization: str = Header(None)) -> str:
         print(f"Auth error: {e}")
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
 
+async def ensure_user_exists(user_id: str) -> None:
+    """Ensure user exists in public.users table, creating if necessary."""
+    client = get_supabase()
+    
+    try:
+        # Check if user exists
+        result = client.table("users").select("id").eq("id", user_id).execute()
+        
+        if not result.data:
+            # User doesn't exist, get email from auth.users
+            auth_user = client.auth.admin.get_user_by_id(user_id)
+            email = auth_user.user.email if auth_user and auth_user.user else f"{user_id}@unknown.com"
+            
+            # Create user record
+            client.table("users").insert({
+                "id": user_id,
+                "email": email,
+                "created_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.utcnow().isoformat()
+            }).execute()
+            
+            print(f"[Supabase] Created user record for {user_id} ({email})")
+    except Exception as e:
+        print(f"[Supabase] Error ensuring user exists: {e}")
+        # Continue anyway - the error will surface on video insert if user still doesn't exist
+
+
 async def upload_video(video_path: str, user_id: str, prompt: str) -> str:
     """Upload video to Supabase storage and save metadata."""
     client = get_supabase()
     bucket = os.getenv("SUPABASE_BUCKET", "manim-videos")
+    
+    # Ensure user exists in public.users
+    await ensure_user_exists(user_id)
     
     video_id = str(uuid.uuid4())
     file_name = f"{user_id}/{video_id}.mp4"
@@ -67,6 +97,7 @@ async def upload_video(video_path: str, user_id: str, prompt: str) -> str:
         "user_id": user_id,
         "prompt": prompt,
         "video_url": video_url,
+        "bucket_path": file_name,
         "created_at": datetime.utcnow().isoformat()
     }).execute()
     
@@ -76,8 +107,11 @@ async def get_user_videos(user_id: str) -> list:
     """Get all videos for a user."""
     client = get_supabase()
     
+    print(f"[Supabase] Fetching videos for User ID: {user_id}")
+    
     response = client.table("videos").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
     
+    print(f"[Supabase] Found {len(response.data)} videos")
     return response.data
 
 async def delete_video(video_id: str, user_id: str) -> bool:

@@ -9,17 +9,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#fdf4ff',
-          100: '#fae8ff',
-          200: '#f5d0fe',
-          300: '#f0abfc',
-          400: '#e879f9',
-          500: '#d946ef',
-          600: '#c026d3',
-          700: '#a21caf',
-          800: '#86198f',
-          900: '#701a75',
+        brand: {
+          black: '#000000',
+          white: '#ffffff',
+          blue: '#3b82f6', // Premium blue
+          'blue-light': '#60a5fa',
+          'blue-dark': '#2563eb',
+          orange: '#f97316', // Warm accent
+          'orange-light': '#fb923c',
+          'orange-dark': '#ea580c',
         },
         dark: {
           50: '#f8fafc',
@@ -36,7 +34,8 @@ const config: Config = {
         }
       },
       fontFamily: {
-        sans: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+        body: ['system-ui', '-apple-system', 'sans-serif'],
         mono: ['var(--font-jetbrains)', 'monospace'],
       },
       animation: {

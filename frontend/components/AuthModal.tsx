@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Mail, Lock, Loader2 } from 'lucide-react'
+import { X, Mail, Lock, Loader2, Sparkles } from 'lucide-react'
 
 type AuthModalProps = {
   onCloseAction: () => void
@@ -34,13 +34,13 @@ export function AuthModal({ onCloseAction }: AuthModalProps) {
       }
     } catch (err: any) {
       const errorMessage = err.message || 'An error occurred'
-      
-      if (errorMessage.includes('Refresh Token Not Found') || 
-          errorMessage.includes('Invalid Refresh Token')) {
+
+      if (errorMessage.includes('Refresh Token Not Found') ||
+        errorMessage.includes('Invalid Refresh Token')) {
         console.warn('Token refresh issue (will retry automatically):', errorMessage)
         return
       }
-      
+
       setError(errorMessage)
       console.error('Auth error:', err)
     } finally {
@@ -54,82 +54,100 @@ export function AuthModal({ onCloseAction }: AuthModalProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
         onClick={onCloseAction}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          className="card w-full max-w-md"
+          className="bg-brand-black border border-white/10 w-full max-w-[420px] rounded-[32px] overflow-hidden shadow-2xl relative"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
-            </h2>
-            <button
-              onClick={onCloseAction}
-              className="p-2 rounded-lg hover:bg-dark-800 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          {/* Decorative background */}
+          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand-blue/20 to-transparent pointer-events-none" />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500" />
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-field pl-12"
-                required
-              />
+          <div className="p-10 relative z-10">
+            <div className="flex items-center justify-between mb-8">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-sans font-bold tracking-tight">
+                  {isSignUp ? 'Create account' : 'Welcome back'}
+                </h2>
+                <p className="text-dark-400 text-sm font-body">
+                  {isSignUp ? 'Start your journey with MovingLines' : 'Continue your animation adventure'}
+                </p>
+              </div>
+              <button
+                onClick={onCloseAction}
+                className="p-3 rounded-2xl hover:bg-white/5 transition-colors text-dark-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500" />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field pl-12"
-                required
-                minLength={6}
-              />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-4">
+                <div className="relative group">
+                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 group-focus-within:text-brand-blue transition-colors" />
+                  <input
+                    type="email"
+                    placeholder="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input-field input-with-icon"
+                    required
+                  />
+                </div>
+
+                <div className="relative group">
+                  <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 group-focus-within:text-brand-blue transition-colors" />
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-field input-with-icon"
+                    required
+                    minLength={6}
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-red-400 text-sm font-medium px-2"
+                >
+                  {error}
+                </motion.p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full flex items-center justify-center gap-3 py-4 text-base"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+                {isSignUp ? 'Get Started' : 'Sign In'}
+              </button>
+            </form>
+
+            <div className="mt-8 pt-8 border-t border-white/5 text-center">
+              <button
+                onClick={() => {
+                  setIsSignUp(!isSignUp)
+                  setError('')
+                  setEmail('')
+                  setPassword('')
+                }}
+                className="text-dark-400 hover:text-white transition-all text-sm font-medium hover:underline underline-offset-4"
+              >
+                {isSignUp
+                  ? 'Already have an account? Sign in'
+                  : "Don't have an account? Sign up"}
+              </button>
             </div>
-
-            {error && (
-              <p className="text-red-400 text-sm">{error}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-              {isSignUp ? 'Sign Up' : 'Sign In'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setIsSignUp(!isSignUp)
-                setError('')
-                setEmail('')
-                setPassword('')
-              }}
-              className="text-dark-400 hover:text-white transition-colors"
-            >
-              {isSignUp 
-                ? 'Already have an account? Sign in' 
-                : "Don't have an account? Sign up"}
-            </button>
           </div>
         </motion.div>
       </motion.div>

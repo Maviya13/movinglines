@@ -61,17 +61,11 @@ export async function getUserVideos(token: string) {
   }
 }
 
-// ======================
-// NEW DRIZZLE API ROUTES
-// ======================
 
-/**
- * Get all videos using Drizzle ORM (Next.js API route)
- * This replaces getUserVideos for better type safety and performance
- */
-export async function getVideos(limit = 50, offset = 0) {
+
+export async function getVideos(limit = 1000, offset = 0) {
   try {
-    const res = await fetch(`/api/videos?limit=${limit}&offset=${offset}`, {
+    const res = await fetch(`/api/videos?scope=all&limit=${limit}&offset=${offset}`, {
       credentials: 'include', // Include cookies for auth
     })
     
@@ -82,9 +76,7 @@ export async function getVideos(limit = 50, offset = 0) {
   }
 }
 
-/**
- * Create a new video record after upload
- */
+
 export async function createVideoRecord(data: {
   prompt: string
   videoUrl: string
@@ -111,9 +103,6 @@ export async function createVideoRecord(data: {
   }
 }
 
-/**
- * Delete a video (both from storage and database)
- */
 export async function deleteVideo(videoId: string) {
   try {
     const res = await fetch(`/api/videos?id=${videoId}`, {
@@ -128,9 +117,6 @@ export async function deleteVideo(videoId: string) {
   }
 }
 
-/**
- * Get user statistics and recent videos
- */
 export async function getUserStats() {
   try {
     const res = await fetch('/api/stats', {

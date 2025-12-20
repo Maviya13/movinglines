@@ -13,7 +13,36 @@ import { createClient } from '@/lib/supabase-server'
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user from Supabase
+    // Parse query params
+    const searchParams = request.nextUrl.searchParams
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const offset = parseInt(searchParams.get('offset') || '0')
+    const scope = (searchParams.get('scope') || 'user').toLowerCase()
+
+    // If scope=all, return recent videos across all users (no auth required)
+    if (scope === 'all') {
+      const videos = await db.query.videos.findMany({
+        orderBy: desc(schema.videos.createdAt),
+        limit,
+        offset,
+      })
+
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.videos)
+
+      return NextResponse.json({
+        videos,
+        pagination: {
+          total: count,
+          limit,
+          offset,
+          hasMore: offset + videos.length < count,
+        },
+      })
+    }
+
+    // Otherwise require auth and return videos for the authenticated user
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
@@ -23,11 +52,6 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       )
     }
-
-    // Parse query params
-    const searchParams = request.nextUrl.searchParams
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
 
     // Fetch user's videos with Drizzle ORM
     const videos = await db.query.videos.findMany({
