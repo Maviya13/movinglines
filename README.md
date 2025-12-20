@@ -1,15 +1,4 @@
-# 🎬 Manim Studio - AI Animation Generator
 
-Generate stunning mathematical animations from text prompts using AI. Describe what you want, and let artificial intelligence create beautiful Manim animations for you.
-
-## ✨ Features
-
-- 🤖 **AI-Powered** - Uses Google Gemini to generate Manim code
-- 🎨 **Beautiful Output** - Creates professional mathematical animations
-- 🔐 **Secure Auth** - User authentication with Supabase
-- 📱 **Responsive UI** - Works on desktop and mobile
-- 🚀 **Fast Rendering** - Multiple quality options from 480p to 4K
-- 💾 **Cloud Storage** - Video storage and management with Supabase
 
 ## 🛠️ Tech Stack
 
