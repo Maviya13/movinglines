@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Zap, Terminal, LayoutTemplate, History, MoreVertical, Cpu, PanelLeftClose, PanelLeftOpen, ChevronRight, MessageSquare, Video, Box, Play, Code, Copy, Check, ArrowRight, X, Send, Loader2, Download, LogOut, Settings, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Zap, Terminal, LayoutTemplate, History, MoreVertical, Cpu, PanelLeftClose, PanelLeftOpen, Box, ArrowRight, X, Loader2, LogOut, Settings, Trash2, Copy } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { generateAnimation, getTaskStatus, getChats, deleteChat, getChatHistory, Quality } from '@/lib/api';
