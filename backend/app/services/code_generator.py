@@ -4,11 +4,24 @@ import re
 import logging
 
 from app.config import get_settings
-from app.prompts.manim_prompt import MANIM_SYSTEM_PROMPT, MANIM_USER_PROMPT
+from app.prompts.manim_prompt import MANIM_SYSTEM_PROMPT
 from app.services.vector_store import get_relevant_examples, format_examples_for_context
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+MANIM_USER_PROMPT = """Create a Manim animation for: {user_prompt}
+
+REQUIREMENTS:
+1. Output ONLY Python code - no markdown, no explanations
+2. Class must be named `GeneratedScene`
+3. Title at TOP, content BELOW (no overlaps!)
+4. Use modern Manim CE syntax (no deprecated functions)
+5. Keep animation between 10-30 seconds total
+6. Choose correct Scene type: Scene (2D), ThreeDScene (3D), MovingCameraScene (camera control)
+
+Begin with `from manim import *` immediately:"""
+
 
 
 def get_llm():

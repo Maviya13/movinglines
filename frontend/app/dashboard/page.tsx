@@ -367,6 +367,31 @@ export default function DashboardPage() {
                   {videoUrl ? (
                       <div className="w-full max-w-4xl aspect-video bg-black border border-white/5 rounded-[2rem] shadow-2xl overflow-hidden relative group">
                           <video src={videoUrl} controls className="w-full h-full object-contain" />
+                          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    const response = await fetch(videoUrl);
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `generated-animation.mp4`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+                                  } catch (error) {
+                                    console.error('Download failed:', error);
+                                    window.open(videoUrl, '_blank');
+                                  }
+                                }}
+                                className="p-2 bg-black/50 backdrop-blur-md rounded-lg text-white hover:bg-black/70 transition-colors"
+                                title="Download Video"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                              </button>
+                          </div>
                       </div>
                   ) : (
                     <div className="w-full max-w-2xl aspect-video bg-[#050505] border border-white/5 rounded-[2rem] shadow-2xl flex flex-col items-center justify-center text-zinc-700 gap-4">

@@ -111,14 +111,30 @@ export function VideoGallery() {
             />
             <div className="mt-4 flex items-center justify-between">
               <p className="text-dark-300">{selectedVideo.prompt}</p>
-              <a
-                href={selectedVideo.videoUrl}
-                download
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-dark-800 hover:bg-dark-700 transition-colors"
+              <button
+                onClick={async (e) => {
+                  e.preventDefault();
+                  try {
+                    const response = await fetch(selectedVideo.videoUrl);
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `animation-${selectedVideo.id.slice(0, 8)}.mp4`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                  } catch (error) {
+                    console.error('Download failed:', error);
+                    window.open(selectedVideo.videoUrl, '_blank');
+                  }
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-dark-800 hover:bg-dark-700 transition-colors text-white"
               >
                 <Download className="w-4 h-4" />
                 Download
-              </a>
+              </button>
             </div>
           </div>
         </div>

@@ -48,6 +48,18 @@ ABSOLUTE REQUIREMENTS (VIOLATIONS = BROKEN CODE)
    - Total animation should be 10-30 seconds
    - self.wait(1) at the very end before scene closes
 
+6. VISUAL STYLE & AESTHETICS (MAKE IT BEAUTIFUL!)
+   - COLOR PALETTE: Use vibrant, modern colors. Avoid default RED/GREEN/BLUE.
+     - Recommended: TEAL, MAROON, GOLD, PURPLE, BLUE_E, ORANGE, YELLOW_D
+     - Use gradients: `obj.set_color_by_gradient(BLUE, PURPLE)`
+   - BACKGROUND: Do NOT always use black.
+     - Use `self.camera.background_color = "#1e1e1e"` (Dark Gray) or `WHITE` (if appropriate).
+     - If using WHITE background, ensure all text/lines are BLACK or dark.
+   - STYLING:
+     - Use `fill_opacity=0.5` for shapes to make them look solid but translucent.
+     - Use `stroke_width=4` for lines to make them visible.
+     - Use `font="Arial"` or `font="Sans-Serif"` for Text (not MathTex) for a modern look.
+
 
 DEPRECATED FUNCTIONS - NEVER USE THESE
 
@@ -240,15 +252,5 @@ Start with `from manim import *` and end with the last line of the construct met
 {context}
 """
 
-MANIM_USER_PROMPT = """Create a Manim animation for: {user_prompt}
 
-REQUIREMENTS:
-1. Output ONLY Python code - no markdown, no explanations
-2. Class must be named `GeneratedScene`
-3. Title at TOP, content BELOW (no overlaps!)
-4. Use modern Manim CE syntax (no deprecated functions)
-5. Keep animation between 10-30 seconds total
-6. Choose correct Scene type: Scene (2D), ThreeDScene (3D), MovingCameraScene (camera control)
-
-Begin with `from manim import *` immediately:"""
 
