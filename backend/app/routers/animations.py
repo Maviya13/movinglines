@@ -3,14 +3,14 @@ from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
 from datetime import datetime
-from app.services.langchain_service import generate_manim_script
-from app.services.manim_service import render_animation
-from app.services.supabase_service import upload_video, get_user_videos, get_current_user, get_supabase, create_chat_in_db, get_user_chats_from_db, delete_chat_from_db, get_chat_tasks_from_db
+from app.services.code_generator import generate_manim_script, generate_improved_code
+from app.services.video_renderer import render_animation
+from app.services.database_service import upload_video, get_user_videos, get_current_user, get_supabase, create_chat_in_db, get_user_chats_from_db, delete_chat_from_db, get_chat_tasks_from_db
 
 router = APIRouter()
 
 class Quality(str, Enum):
-    LOW = "l"      # 480p
+    LOW = "l"      # 420p
     MEDIUM = "m"   # 720p
     HIGH = "h"     # 1080p
     FOURK = "k"    # 4K
@@ -120,8 +120,33 @@ async def process_animation(task_id: str, prompt: str, quality: str, user_id: st
         })
         
         print(f"[{task_id}] Rendering animation...")
-        video_path = await render_animation(script, quality)
-        print(f"[{task_id}] Video rendered at: {video_path}")
+        
+        try:
+            video_path = await render_animation(script, quality)
+            print(f"[{task_id}] Video rendered at: {video_path}")
+        except RuntimeError as render_error:
+            error_str = str(render_error)
+            print(f"[{task_id}] First attempt failed: {error_str[:200]}")
+            
+            if any(err in error_str for err in ["IndentationError", "SyntaxError", "AttributeError", "TypeError", "invalid syntax"]):
+                print(f"[{task_id}] Attempting self-healing...")
+                
+                # Don't update status to avoid constraint violation
+                # Keep it as rendering while we retry
+                
+                error_context = {
+                    'prompt': prompt,
+                    'code': script,
+                    'error': error_str
+                }
+                
+                script = await generate_improved_code(error_context)
+                
+                print(f"[{task_id}] Retrying with improved code...")
+                video_path = await render_animation(script, quality)
+                print(f"[{task_id}] Retry successful: {video_path}")
+            else:
+                raise
         
         update_task_in_db(task_id, {"status": "uploading", "progress": 80})
         

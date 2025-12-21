@@ -3,16 +3,17 @@ const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').rep
 export type Quality = 'l' | 'm' | 'h' | 'k'
 
 export const qualityLabels: Record<Quality, string> = {
-  l: '480p',
-  m: '720p',
-  h: '1080p',
-  k: '4K'
+  'l': '420p',
+  'm': '720p',
+  'h': '1080p',
+  'k': '4K'
 }
 
 async function handleResponse(res: Response) {
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}))
-    throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`)
+    const errorMessage = typeof errorData.detail === 'string' ? errorData.detail : `HTTP ${res.status}: ${res.statusText}`
+    throw new Error(errorMessage)
   }
   return res.json()
 }

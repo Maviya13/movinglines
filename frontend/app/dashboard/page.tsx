@@ -27,6 +27,7 @@ export default function DashboardPage() {
 
   // Generation State
   const [prompt, setPrompt] = useState('');
+  const [quality, setQuality] = useState<Quality>('m');
   const [taskId, setTaskId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('');
   const [progress, setProgress] = useState(0);
@@ -158,7 +159,7 @@ export default function DashboardPage() {
     setVideoUrl(null);
     
     try {
-      const data = await generateAnimation(prompt, 'm', session.access_token, activeChatId || undefined);
+      const data = await generateAnimation(prompt, quality, session.access_token, activeChatId || undefined);
       setTaskId(data.task_id);
       
       if (!activeChatId && data.chat_id) {
@@ -312,7 +313,26 @@ export default function DashboardPage() {
                    </div>
                 )}
               </div>
-              <div className="p-4 border-t border-white/[0.06]">
+              <div className="p-4 border-t border-white/[0.06] space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-white/60">QUALITY:</span>
+                  <div className="flex bg-white/[0.03] rounded-lg p-1 border border-white/10 gap-1">
+                    {(['l', 'm', 'h', 'k'] as Quality[]).map((q) => (
+                      <button
+                        key={q}
+                        onClick={() => setQuality(q)}
+                        disabled={isGenerating}
+                        className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+                          quality === q
+                            ? 'bg-blue-500 text-white shadow-lg'
+                            : 'text-white/60 hover:text-white hover:bg-white/[0.08]'
+                        } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {q === 'k' ? '4K' : (q === 'l' ? '420p' : q === 'm' ? '720p' : '1080p')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="relative">
                     <textarea 
                         value={prompt}

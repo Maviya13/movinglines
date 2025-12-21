@@ -113,16 +113,19 @@ export function Generator({ onVideoGeneratedAction }: GeneratorProps) {
 
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-2">
-              <div className="flex bg-black/20 rounded-xl p-1 border border-white/5">
+              <span className="text-xs font-medium text-white/60 mr-1">Quality:</span>
+              <div className="flex bg-white/10 rounded-xl p-1 border border-white/20 backdrop-blur-sm">
                 {qualities.map((q) => (
                   <button
                     key={q}
                     onClick={() => setQuality(q)}
+                    disabled={isGenerating}
                     className={`
-                      px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+                      px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
                       ${quality === q
-                        ? 'bg-brand-blue text-white shadow-lg'
-                        : 'text-dark-400 hover:text-white hover:bg-white/5'}
+                        ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/30 scale-105'
+                        : 'text-white/70 hover:text-white hover:bg-white/10'}
+                      ${isGenerating ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
                     `}
                   >
                     {qualityLabels[q]}
