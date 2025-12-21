@@ -32,7 +32,7 @@ def get_vectorstore():
 
 def get_llm():
     return ChatGoogleGenerativeAI(
-        model="gemini-1.5-pro",
+        model="gemini-2.0-flash-exp",
         google_api_key=settings.google_api_key,
         temperature=0.7
     )

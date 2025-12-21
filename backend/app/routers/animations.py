@@ -5,7 +5,7 @@ from enum import Enum
 from datetime import datetime
 from app.services.langchain_service import generate_manim_script
 from app.services.manim_service import render_animation
-from app.services.supabase_service import upload_video, get_user_videos, get_current_user, get_supabase
+from app.services.supabase_service import upload_video, get_user_videos, get_current_user, get_supabase, create_chat_in_db, get_user_chats_from_db, delete_chat_from_db, get_chat_tasks_from_db
 
 router = APIRouter()
 
@@ -18,9 +18,11 @@ class Quality(str, Enum):
 class AnimationRequest(BaseModel):
     prompt: str
     quality: Quality = Quality.MEDIUM
+    chat_id: Optional[str] = None
 
 class AnimationResponse(BaseModel):
     task_id: str
+    chat_id: str
     status: str
     message: str
 
@@ -36,12 +38,13 @@ def update_task_in_db(task_id: str, updates: dict):
     updates["updated_at"] = datetime.utcnow().isoformat()
     client.table("tasks").update(updates).eq("id", task_id).execute()
 
-def create_task_in_db(task_id: str, user_id: str, prompt: str, quality: str):
+def create_task_in_db(task_id: str, user_id: str, prompt: str, quality: str, chat_id: str):
     """Create task in database"""
     client = get_supabase()
     client.table("tasks").insert({
         "id": task_id,
         "user_id": user_id,
+        "chat_id": chat_id,
         "prompt": prompt,
         "quality": quality,
         "status": "processing",
@@ -49,6 +52,21 @@ def create_task_in_db(task_id: str, user_id: str, prompt: str, quality: str):
         "created_at": datetime.utcnow().isoformat(),
         "updated_at": datetime.utcnow().isoformat()
     }).execute()
+
+@router.get("/chats")
+async def get_chats(user_id: str = Depends(get_current_user)):
+    """Get all chats for the current user"""
+    return get_user_chats_from_db(user_id)
+
+@router.delete("/chats/{chat_id}")
+async def delete_chat(chat_id: str, user_id: str = Depends(get_current_user)):
+    """Delete a chat session"""
+    return delete_chat_from_db(chat_id, user_id)
+
+@router.get("/chats/{chat_id}/history")
+async def get_chat_history(chat_id: str, user_id: str = Depends(get_current_user)):
+    """Get history (tasks) for a specific chat"""
+    return get_chat_tasks_from_db(chat_id, user_id)
 
 @router.post("/generate", response_model=AnimationResponse)
 async def generate_animation(
@@ -59,8 +77,15 @@ async def generate_animation(
     import uuid
     task_id = str(uuid.uuid4())
     
+    # Determine Chat ID
+    chat_id = request.chat_id
+    if not chat_id:
+        # Create new chat with title from prompt (truncated)
+        title = request.prompt[:50] + "..." if len(request.prompt) > 50 else request.prompt
+        chat_id = create_chat_in_db(user_id, title)
+
     # Create task in database
-    create_task_in_db(task_id, user_id, request.prompt, request.quality.value)
+    create_task_in_db(task_id, user_id, request.prompt, request.quality.value, chat_id)
     
     background_tasks.add_task(
         process_animation,
@@ -72,6 +97,7 @@ async def generate_animation(
     
     return AnimationResponse(
         task_id=task_id,
+        chat_id=chat_id,
         status="processing",
         message="Animation generation started"
     )

@@ -103,6 +103,55 @@ async def upload_video(video_path: str, user_id: str, prompt: str) -> str:
     
     return video_url
 
+def create_chat_in_db(user_id: str, title: str) -> str:
+    """Create a new chat session."""
+    client = get_supabase()
+    chat_id = str(uuid.uuid4())
+    
+    client.table("chats").insert({
+        "id": chat_id,
+        "user_id": user_id,
+        "title": title,
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat()
+    }).execute()
+    
+    return chat_id
+
+def get_user_chats_from_db(user_id: str):
+    """Get all chats for a user."""
+    client = get_supabase()
+    result = client.table("chats").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
+    return result.data
+
+def delete_chat_from_db(chat_id: str, user_id: str) -> bool:
+    """Delete a chat session and its associated tasks."""
+    client = get_supabase()
+    
+    # Verify ownership
+    chat = client.table("chats").select("*").eq("id", chat_id).eq("user_id", user_id).single().execute()
+    
+    if not chat.data:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    
+    # Delete chat
+    client.table("chats").delete().eq("id", chat_id).execute()
+    
+    return True
+
+def get_chat_tasks_from_db(chat_id: str, user_id: str):
+    """Get all tasks for a specific chat."""
+    client = get_supabase()
+    
+    # Verify ownership
+    chat = client.table("chats").select("id").eq("id", chat_id).eq("user_id", user_id).single().execute()
+    if not chat.data:
+        raise HTTPException(status_code=404, detail="Chat not found")
+
+    # Fetch tasks
+    result = client.table("tasks").select("*").eq("chat_id", chat_id).order("created_at", desc=True).execute()
+    return result.data
+
 async def get_user_videos(user_id: str) -> list:
     """Get all videos for a user."""
     client = get_supabase()
