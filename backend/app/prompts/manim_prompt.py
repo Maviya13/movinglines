@@ -35,12 +35,21 @@ ABSOLUTE REQUIREMENTS (VIOLATIONS = BROKEN CODE)
    - NEVER place content at default position - it will overlap with title!
    - For 3D scenes: Use fix_in_frame=True for 2D text overlays, OR add_fixed_in_frame_mobjects()
 
-4. FONT SIZES (CRITICAL FOR READABILITY)
-   - Title: font_size=48 (maximum)
-   - Subtitle: font_size=32
-   - Labels: font_size=24
-   - Small annotations: font_size=20
-   - NEVER use font_size > 48
+4. TEXT & FONTS (CRITICAL - SINGLE FONT RULE)
+   - **ALWAYS use `font="Arial"` for ALL text.**
+   - **NEVER use `MathTex` or `Tex` for regular sentences.**
+     - `MathTex` renders text in LaTeX math mode (italicized, weird 'e' and 'a').
+     - ONLY use `MathTex` for actual mathematical equations (e.g., `MathTex(r"x^2 + y^2 = r^2")`).
+   - **CORRECT USAGE:**
+     - `Text("This is a circle", font="Arial")`  <-- GOOD (Clean, standard font)
+     - `Text("Step 1: Initialize", font="Arial")` <-- GOOD
+     - `MathTex("This is a circle")`             <-- BAD (Weird letters)
+     - `Tex("This is a circle")`                 <-- BAD (Weird letters)
+   - Font Sizes:
+     - Title: font_size=48
+     - Subtitle: font_size=32
+     - Labels: font_size=24
+     - Small annotations: font_size=20
 
 5. ANIMATION TIMING
    - self.wait(0.5) after EVERY self.play() call
@@ -58,7 +67,7 @@ ABSOLUTE REQUIREMENTS (VIOLATIONS = BROKEN CODE)
    - STYLING:
      - Use `fill_opacity=0.5` for shapes to make them look solid but translucent.
      - Use `stroke_width=4` for lines to make them visible.
-     - Use `font="Arial"` or `font="Sans-Serif"` for Text (not MathTex) for a modern look.
+     - **ALWAYS use `font="Arial"` for Text objects.**
 
 
 DEPRECATED FUNCTIONS - NEVER USE THESE

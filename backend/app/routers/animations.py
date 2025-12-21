@@ -128,25 +128,23 @@ async def process_animation(task_id: str, prompt: str, quality: str, user_id: st
             error_str = str(render_error)
             print(f"[{task_id}] First attempt failed: {error_str[:200]}")
             
-            if any(err in error_str for err in ["IndentationError", "SyntaxError", "AttributeError", "TypeError", "invalid syntax"]):
-                print(f"[{task_id}] Attempting self-healing...")
-                
-                # Don't update status to avoid constraint violation
-                # Keep it as rendering while we retry
-                
-                error_context = {
-                    'prompt': prompt,
-                    'code': script,
-                    'error': error_str
-                }
-                
-                script = await generate_improved_code(error_context)
-                
-                print(f"[{task_id}] Retrying with improved code...")
-                video_path = await render_animation(script, quality)
-                print(f"[{task_id}] Retry successful: {video_path}")
-            else:
-                raise
+            # Always attempt self-healing for any rendering error
+            print(f"[{task_id}] Attempting self-healing...")
+            
+            # Don't update status to avoid constraint violation
+            # Keep it as rendering while we retry
+            
+            error_context = {
+                'prompt': prompt,
+                'code': script,
+                'error': error_str
+            }
+            
+            script = await generate_improved_code(error_context)
+            
+            print(f"[{task_id}] Retrying with improved code...")
+            video_path = await render_animation(script, quality)
+            print(f"[{task_id}] Retry successful: {video_path}")
         
         update_task_in_db(task_id, {"status": "uploading", "progress": 80})
         

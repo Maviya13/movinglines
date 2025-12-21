@@ -8,7 +8,7 @@ from app.config import get_settings
 from app.prompts.manim_prompt import MANIM_SYSTEM_PROMPT
 from app.prompts.enhancement_prompt import ENHANCEMENT_SYSTEM_PROMPT
 from app.prompts.repair_prompt import REPAIR_SYSTEM_PROMPT
-from app.services.pinecone_service import get_relevant_examples, format_examples_for_context
+from app.services.vector_store import get_relevant_examples, format_examples_for_context
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -29,7 +29,7 @@ Begin with `from manim import *` immediately:"""
 
 def get_llm():
     return ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-exp",
+        model="gemini-2.5-flash",
         google_api_key=settings.google_api_key,
         temperature=0.7
     )
