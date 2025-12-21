@@ -9,13 +9,17 @@
 }
 
 body {
-  background: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(249, 115, 22, 0.15), transparent 25%),
-    linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
+  background: #000000;
   color: #ffffff;
   min-height: 100vh;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-geist-sans);
   @apply antialiased overflow-x-hidden;
+}
+
+.grid-bg {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 }
 
 .aurora-gradient {
@@ -33,7 +37,7 @@ body {
 }
 
 .btn-primary {
-  @apply relative px-8 py-4 rounded-full font-semibold transition-all duration-300 bg-brand-blue text-white hover:bg-blue-600 active:scale-95 shadow-lg shadow-brand-blue/20;
+  @apply relative px-8 py-4 rounded-full font-semibold transition-all duration-300 bg-white text-black hover:bg-zinc-200 active:scale-95;
 }
 
 .btn-secondary {
@@ -41,7 +45,7 @@ body {
 }
 
 .input-field {
-  @apply w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/20 outline-none transition-all duration-300 placeholder:text-dark-500;
+  @apply w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 focus:border-white/30 focus:ring-0 outline-none transition-all duration-300 placeholder:text-zinc-600 text-white;
 }
 
 /* Fix icon overlap in inputs */
@@ -54,7 +58,7 @@ body {
 }
 
 .video-card {
-  @apply relative overflow-hidden rounded-[32px] bg-white/5 border border-white/10 transition-all duration-500 hover:border-brand-blue/30 hover:shadow-xl hover:shadow-brand-blue/5;
+  @apply relative overflow-hidden rounded-[32px] bg-white/5 border border-white/10 transition-all duration-500 hover:border-white/30 hover:shadow-xl hover:shadow-white/5;
 }
 
 h1,

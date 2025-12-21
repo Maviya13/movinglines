@@ -73,9 +73,42 @@ export const videoTags = pgTable('video_tags', {
 }))
 
 
+export const chats = pgTable('chats', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index('chats_user_id_idx').on(table.userId),
+  createdAtIdx: index('chats_created_at_idx').on(table.createdAt),
+}))
+
+export const tasks = pgTable('tasks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  chatId: uuid('chat_id').references(() => chats.id, { onDelete: 'cascade' }),
+  prompt: text('prompt').notNull(),
+  quality: text('quality', { enum: ['l', 'm', 'h', 'k'] }).notNull(),
+  status: text('status', { enum: ['processing', 'generating_script', 'rendering', 'uploading', 'completed', 'failed'] }).notNull().default('processing'),
+  progress: integer('progress').notNull().default(0),
+  videoUrl: text('video_url'),
+  generatedScript: text('generated_script'),
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index('tasks_user_id_idx').on(table.userId),
+  chatIdIdx: index('tasks_chat_id_idx').on(table.chatId),
+  statusIdx: index('tasks_status_idx').on(table.status),
+  createdAtIdx: index('tasks_created_at_idx').on(table.createdAt),
+}))
+
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   videos: many(videos),
+  chats: many(chats),
+  tasks: many(tasks),
   stats: one(userStats, {
     fields: [users.id],
     references: [userStats.userId],
@@ -104,6 +137,24 @@ export const videoTagsRelations = relations(videoTags, ({ one }) => ({
   }),
 }))
 
+export const chatsRelations = relations(chats, ({ one, many }) => ({
+  user: one(users, {
+    fields: [chats.userId],
+    references: [users.id],
+  }),
+  tasks: many(tasks),
+}))
+
+export const tasksRelations = relations(tasks, ({ one }) => ({
+  user: one(users, {
+    fields: [tasks.userId],
+    references: [users.id],
+  }),
+  chat: one(chats, {
+    fields: [tasks.chatId],
+    references: [chats.id],
+  }),
+}))
 
 
 export type User = typeof users.$inferSelect
@@ -117,3 +168,9 @@ export type NewUserStats = typeof userStats.$inferInsert
 
 export type VideoTag = typeof videoTags.$inferSelect
 export type NewVideoTag = typeof videoTags.$inferInsert
+
+export type Chat = typeof chats.$inferSelect
+export type NewChat = typeof chats.$inferInsert
+
+export type Task = typeof tasks.$inferSelect
+export type NewTask = typeof tasks.$inferInsert

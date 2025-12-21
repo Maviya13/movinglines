@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { GeistSans } from 'geist/font/sans'
 import './globals.css'
 import { AuthProvider } from '@/components/providers/AuthProvider'
 import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
@@ -18,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="font-sans bg-brand-black text-white antialiased">
+      <body className={`${GeistSans.variable} font-sans bg-black text-white antialiased`}>
         <ErrorBoundary>
           <AuthProvider>
             {children}

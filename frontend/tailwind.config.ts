@@ -34,8 +34,8 @@ const config: Config = {
         }
       },
       fontFamily: {
-        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
-        body: ['system-ui', '-apple-system', 'sans-serif'],
+        sans: ['var(--font-geist-sans)', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+        body: ['var(--font-geist-sans)', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['var(--font-jetbrains)', 'monospace'],
       },
       animation: {

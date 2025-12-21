@@ -35,7 +35,11 @@ export function AuthModal({ onCloseAction }: AuthModalProps) {
         onCloseAction()
       }, 100)
     } catch (err: any) {
-      const errorMessage = err.message || 'An error occurred'
+      let errorMessage = err.message || 'An error occurred'
+
+      if (errorMessage === 'Failed to fetch') {
+        errorMessage = 'Network error: Unable to connect to authentication server. Please check your internet connection or ad blockers.'
+      }
 
       if (errorMessage.includes('Refresh Token Not Found') ||
         errorMessage.includes('Invalid Refresh Token')) {

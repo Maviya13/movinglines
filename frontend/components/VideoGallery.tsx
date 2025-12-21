@@ -46,8 +46,8 @@ export function VideoGallery() {
   if (videos.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-dark-400 text-lg">
-          No animations yet. Create your first one above!
+        <p className="text-zinc-500 text-lg">
+          No animations yet. Create your first one in the Workspace!
         </p>
       </div>
     )
@@ -62,10 +62,10 @@ export function VideoGallery() {
             className="video-card group cursor-pointer"
             onClick={() => setSelectedVideo(video)}
           >
-            <div className="aspect-video bg-dark-800 relative">
+            <div className="aspect-video bg-black relative">
               <video
                 src={video.videoUrl}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                 muted
                 playsInline
                 onMouseEnter={(e) => e.currentTarget.play()}
@@ -81,10 +81,10 @@ export function VideoGallery() {
               </div>
             </div>
             <div className="p-4">
-              <p className="text-sm text-dark-300 line-clamp-2 mb-2">
+              <p className="text-sm text-zinc-300 line-clamp-2 mb-2 font-medium">
                 {video.prompt}
               </p>
-              <div className="flex items-center gap-2 text-xs text-dark-500">
+              <div className="flex items-center gap-2 text-xs text-zinc-500">
                 <Calendar className="w-3 h-3" />
                 {new Date(video.createdAt!).toLocaleDateString()}
               </div>

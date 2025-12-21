@@ -17,7 +17,7 @@ async function handleResponse(res: Response) {
   return res.json()
 }
 
-export async function generateAnimation(prompt: string, quality: Quality, token: string) {
+export async function generateAnimation(prompt: string, quality: Quality, token: string, chatId?: string) {
   try {
     const res = await fetch(`${API_URL}/api/animations/generate`, {
       method: 'POST',
@@ -25,12 +25,52 @@ export async function generateAnimation(prompt: string, quality: Quality, token:
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ prompt, quality })
+      body: JSON.stringify({ prompt, quality, chat_id: chatId })
     })
     
     return await handleResponse(res)
   } catch (error) {
     console.error('Animation generation failed:', error)
+    throw error
+  }
+}
+
+export async function getChats(token: string) {
+  try {
+    const res = await fetch(`${API_URL}/api/animations/chats`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    
+    return await handleResponse(res)
+  } catch (error) {
+    console.error('Failed to get chats:', error)
+    throw error
+  }
+}
+
+export async function deleteChat(chatId: string, token: string) {
+  try {
+    const res = await fetch(`${API_URL}/api/animations/chats/${chatId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    
+    return await handleResponse(res)
+  } catch (error) {
+    console.error('Failed to delete chat:', error)
+    throw error
+  }
+}
+
+export async function getChatHistory(chatId: string, token: string) {
+  try {
+    const res = await fetch(`${API_URL}/api/animations/chats/${chatId}/history`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    
+    return await handleResponse(res)
+  } catch (error) {
+    console.error('Failed to get chat history:', error)
     throw error
   }
 }
