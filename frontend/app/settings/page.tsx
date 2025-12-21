@@ -1,7 +1,6 @@
 'use client'
 
 import { Settings, User } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { useAuth } from '@/components/providers/AuthProvider'
 
 export default function SettingsPage() {
@@ -11,9 +10,7 @@ export default function SettingsPage() {
         <div className="min-h-screen bg-brand-black/50 p-6 lg:p-12 lg:pl-80">
             <div className="max-w-3xl mx-auto space-y-8">
                 <header>
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                    <div
                         className="space-y-1"
                     >
                         <h1 className="text-3xl font-sans font-bold flex items-center gap-3">
@@ -21,7 +18,7 @@ export default function SettingsPage() {
                             Settings
                         </h1>
                         <p className="text-dark-400">Manage your account preferences</p>
-                    </motion.div>
+                    </div>
                 </header>
 
                 <div className="card p-8 space-y-6">

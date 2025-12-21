@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
-import { motion, AnimatePresence } from 'framer-motion'
 import { X, Mail, Lock, Loader2, Sparkles } from 'lucide-react'
 
 type AuthModalProps = {
@@ -52,21 +51,14 @@ export function AuthModal({ onCloseAction }: AuthModalProps) {
   }
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
-        onClick={onCloseAction}
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+      onClick={onCloseAction}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-brand-black border border-white/10 w-full max-w-[420px] rounded-[32px] overflow-hidden shadow-2xl relative"
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-brand-black border border-white/10 w-full max-w-[420px] rounded-[32px] overflow-hidden shadow-2xl relative"
-        >
           {/* Decorative background */}
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand-blue/20 to-transparent pointer-events-none" />
 
@@ -117,13 +109,11 @@ export function AuthModal({ onCloseAction }: AuthModalProps) {
               </div>
 
               {error && (
-                <motion.p
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
+                <p
                   className="text-red-400 text-sm font-medium px-2"
                 >
                   {error}
-                </motion.p>
+                </p>
               )}
 
               <button
@@ -152,9 +142,8 @@ export function AuthModal({ onCloseAction }: AuthModalProps) {
               </button>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </div>
+      </div>
   )
 }
 

@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/components/providers/AuthProvider'
 import { Sparkles, History, LayoutDashboard, Settings, LogOut, X } from 'lucide-react'
-import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -31,14 +30,9 @@ export function Sidebar({ isOpen, onCloseAction }: SidebarProps) {
                 />
             )}
 
-            <motion.aside
-                initial={false}
-                animate={{
-                    x: isOpen ? 0 : -300,
-                    opacity: isOpen ? 1 : 0
-                }}
+            <aside
                 className={`fixed top-0 left-0 bottom-0 w-72 bg-brand-black/95 backdrop-blur-xl border-r border-white/10 z-50 
-                   flex flex-col transition-all lg:!translate-x-0 lg:!opacity-100 font-body`}
+                   flex flex-col ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'} lg:!translate-x-0 lg:!opacity-100 font-body`}
             >
                 {/* Logo Section */}
                 <div className="p-8 flex items-center justify-between">
@@ -96,7 +90,7 @@ export function Sidebar({ isOpen, onCloseAction }: SidebarProps) {
                         <span className="font-medium">Sign Out</span>
                     </button>
                 </div>
-            </motion.aside>
+            </aside>
         </>
     )
 }

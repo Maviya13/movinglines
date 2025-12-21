@@ -5,7 +5,6 @@ import { AuthModal } from '@/components/AuthModal'
 import { Generator } from '@/components/Generator'
 import { VideoGallery } from '@/components/VideoGallery'
 import { Navbar } from '@/components/Navbar'
-import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { Sidebar } from '@/components/Sidebar'
 import { Menu, Play, Sparkles, CheckCircle2, ArrowRight, Layers, Zap, MousePointer2 } from 'lucide-react'
@@ -66,7 +65,7 @@ export default function Home() {
         </nav>
       )}
 
-      <main className={`transition-all duration-300 ${user ? 'lg:pl-72' : ''}`}>
+      <main className={`${user ? 'lg:pl-72' : ''}`}>
         {/* Mobile Header for Logged In */}
         {user && (
           <header className="lg:hidden flex items-center justify-between p-6 border-b border-white/5 bg-brand-black/50 backdrop-blur-md sticky top-0 z-40">
@@ -88,9 +87,7 @@ export default function Home() {
               <section className="relative pt-48 pb-20 px-6 text-center overflow-hidden">
                 <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-brand-blue/10 blur-[120px] rounded-full pointer-events-none" />
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                <div
                   className="max-w-4xl mx-auto space-y-8 relative z-10"
                 >
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-blue/10 border border-brand-blue/20 text-brand-blue text-xs font-semibold mb-6">
@@ -120,13 +117,10 @@ export default function Home() {
                       Explore Examples
                     </button>
                   </div>
-                </motion.div>
+                </div>
 
                 {/* Main Feature Preview */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 }}
+                <div
                   className="mt-20 max-w-6xl mx-auto aspect-video bg-white/5 rounded-[40px] border border-white/10 overflow-hidden shadow-2xl relative group"
                 >
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -135,7 +129,7 @@ export default function Home() {
                       <Play className="w-10 h-10 text-white fill-white shadow-xl shadow-brand-blue/50" />
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </section>
 
               {/* Features Grid */}
@@ -255,15 +249,13 @@ export default function Home() {
               <div className="absolute top-[calc(50%+5rem)] left-[calc(50%+5rem)] -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-orange/10 rounded-full blur-[100px] pointer-events-none -z-10 mix-blend-screen" />
 
               <div className="w-full max-w-4xl space-y-12 text-center pb-20 pt-20">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                <div
                   className="space-y-4"
                 >
                   <h1 className="text-4xl md:text-5xl font-sans font-bold tracking-tight">
                     Time to create, <span className="gradient-text">{user.email?.split('@')[0] || 'Creator'}</span>
                   </h1>
-                </motion.div>
+                </div>
 
                 <div className="w-full">
                   <Generator onVideoGeneratedAction={() => setRefreshGallery(r => r + 1)} />

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { getVideos } from '@/lib/api'
 import { useAuth } from '@/components/providers/AuthProvider'
 import type { Video as DbVideo } from '@/lib/db/schema'
-import { motion } from 'framer-motion'
 import { Play, Download, Calendar } from 'lucide-react'
 
 export function VideoGallery() {
@@ -57,12 +56,9 @@ export function VideoGallery() {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {videos.map((video, index) => (
-          <motion.div
+        {videos.map((video) => (
+          <div
             key={video.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
             className="video-card group cursor-pointer"
             onClick={() => setSelectedVideo(video)}
           >
@@ -93,22 +89,17 @@ export function VideoGallery() {
                 {new Date(video.createdAt!).toLocaleDateString()}
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
       {/* Video Modal */}
       {selectedVideo && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
           onClick={() => setSelectedVideo(null)}
         >
-          <motion.div
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
+          <div
             className="w-full max-w-4xl"
             onClick={(e) => e.stopPropagation()}
           >
@@ -129,8 +120,8 @@ export function VideoGallery() {
                 Download
               </a>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
     </>
   )

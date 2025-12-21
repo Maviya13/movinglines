@@ -2,16 +2,13 @@
 
 import { VideoGallery } from '@/components/VideoGallery'
 import { Layers } from 'lucide-react'
-import { motion } from 'framer-motion'
 
 export default function AnimationsPage() {
     return (
         <div className="min-h-screen bg-brand-black/50 p-6 lg:p-12 lg:pl-80">
             <div className="max-w-7xl mx-auto space-y-8">
                 <header>
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                    <div
                         className="space-y-1"
                     >
                         <h1 className="text-3xl font-sans font-bold flex items-center gap-3">
@@ -19,7 +16,7 @@ export default function AnimationsPage() {
                             My Animations
                         </h1>
                         <p className="text-dark-400">Manage and download your generated videos</p>
-                    </motion.div>
+                    </div>
                 </header>
 
                 <div className="border-t border-white/5 pt-8">

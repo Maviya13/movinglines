@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/components/providers/AuthProvider'
 import { Sparkles, LogOut } from 'lucide-react'
-import { motion } from 'framer-motion'
 
 type NavbarProps = {
   onAuthClickAction: () => void
@@ -12,9 +11,7 @@ export function Navbar({ onAuthClickAction }: NavbarProps) {
   const { user, signOut } = useAuth()
 
   return (
-    <motion.nav 
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <nav 
       className="fixed top-0 left-0 right-0 z-50 glass"
     >
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -45,7 +42,7 @@ export function Navbar({ onAuthClickAction }: NavbarProps) {
           )}
         </div>
       </div>
-    </motion.nav>
+    </nav>
   )
 }
 

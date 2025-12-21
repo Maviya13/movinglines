@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { generateAnimation, getTaskStatus, Quality, qualityLabels } from '@/lib/api'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Loader2, ArrowUp, X, Film } from 'lucide-react'
 
 type GeneratorProps = {
@@ -154,51 +153,41 @@ export function Generator({ onVideoGeneratedAction }: GeneratorProps) {
         {/* Progress Bar (Bottom Border) */}
         {isGenerating && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/5 overflow-hidden rounded-b-3xl">
-            <motion.div
-              className="h-full bg-gradient-to-r from-brand-blue to-brand-orange"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.5 }}
+            <div
+              className="h-full bg-gradient-to-r from-brand-blue to-brand-orange transition-all duration-500"
+              style={{ width: `${progress}%` }}
             />
           </div>
         )}
       </div>
 
       {/* Status / Error Toast */}
-      <AnimatePresence>
-        {isGenerating && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute -bottom-20 left-0 right-0 flex justify-center"
-          >
-            <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-black/50 backdrop-blur-md border border-white/10 shadow-xl">
-              <Loader2 className="w-4 h-4 animate-spin text-brand-blue" />
-              <span className="text-sm font-medium text-dark-300 capitalize">
-                {status.replace('_', ' ')}...
-              </span>
-              <span className="text-xs text-dark-500 border-l border-white/10 pl-3">
-                {progress}%
-              </span>
-            </div>
-          </motion.div>
-        )}
+      {isGenerating && (
+        <div
+          className="absolute -bottom-20 left-0 right-0 flex justify-center"
+        >
+          <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-black/50 backdrop-blur-md border border-white/10 shadow-xl">
+            <Loader2 className="w-4 h-4 animate-spin text-brand-blue" />
+            <span className="text-sm font-medium text-dark-300 capitalize">
+              {status.replace('_', ' ')}...
+            </span>
+            <span className="text-xs text-dark-500 border-l border-white/10 pl-3">
+              {progress}%
+            </span>
+          </div>
+        </div>
+      )}
 
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute -bottom-20 left-0 right-0 flex justify-center"
-          >
-            <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-red-900/50 backdrop-blur-md border border-red-500/20 shadow-xl text-red-200 text-sm">
-              <X className="w-4 h-4" />
-              {error}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {error && (
+        <div
+          className="absolute -bottom-20 left-0 right-0 flex justify-center"
+        >
+          <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-red-900/50 backdrop-blur-md border border-red-500/20 shadow-xl text-red-200 text-sm">
+            <X className="w-4 h-4" />
+            {error}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
