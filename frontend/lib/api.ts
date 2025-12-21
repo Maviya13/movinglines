@@ -63,9 +63,10 @@ export async function getUserVideos(token: string) {
 
 
 
-export async function getVideos(limit = 1000, offset = 0) {
+export async function getVideos(limit = 1000, offset = 0, scope?: 'all') {
   try {
-    const res = await fetch(`/api/videos?scope=all&limit=${limit}&offset=${offset}`, {
+    const scopeParam = scope === 'all' ? '?scope=all&' : '?'
+    const res = await fetch(`/api/videos${scopeParam}limit=${limit}&offset=${offset}`, {
       credentials: 'include', // Include cookies for auth
     })
     

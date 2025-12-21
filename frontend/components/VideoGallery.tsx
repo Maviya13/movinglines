@@ -2,18 +2,26 @@
 
 import { useState, useEffect } from 'react'
 import { getVideos } from '@/lib/api'
+import { useAuth } from '@/components/providers/AuthProvider'
 import type { Video as DbVideo } from '@/lib/db/schema'
 import { motion } from 'framer-motion'
 import { Play, Download, Calendar } from 'lucide-react'
 
 export function VideoGallery() {
+  const { session } = useAuth()
   const [videos, setVideos] = useState<DbVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedVideo, setSelectedVideo] = useState<DbVideo | null>(null)
 
   useEffect(() => {
     const fetchVideos = async () => {
+      if (!session?.access_token) {
+        setLoading(false)
+        return
+      }
+
       try {
+        // Fetch only authenticated user's videos (no scope parameter = user-scoped)
         const { videos } = await getVideos(1000, 0)
         setVideos(videos)
       } catch (err) {
@@ -24,7 +32,7 @@ export function VideoGallery() {
     }
 
     fetchVideos()
-  }, [])
+  }, [session?.access_token])
 
   if (loading) {
     return (

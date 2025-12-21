@@ -25,13 +25,16 @@ export function AuthModal({ onCloseAction }: AuthModalProps) {
     try {
       if (isSignUp) {
         await signUp(email, password)
-        setError('')
-        onCloseAction()
       } else {
         await signIn(email, password)
-        setError('')
-        onCloseAction()
       }
+      
+      // Close modal after successful auth (auth state will be updated by AuthProvider)
+      setError('')
+      // Add small delay to ensure auth state is updated before closing
+      setTimeout(() => {
+        onCloseAction()
+      }, 100)
     } catch (err: any) {
       const errorMessage = err.message || 'An error occurred'
 
