@@ -24,6 +24,10 @@ app.add_middleware(
 app.include_router(animations.router, prefix="/api/animations", tags=["animations"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
+@app.get("/")
+async def root_health():
+    return {"status": "ok"}
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
