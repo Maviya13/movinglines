@@ -3,6 +3,10 @@
 import { useState } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { X, Mail, Lock, Loader2, Sparkles } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 
 type AuthModalProps = {
   onCloseAction: () => void
@@ -28,9 +32,7 @@ export function AuthModal({ onCloseAction }: AuthModalProps) {
         await signIn(email, password)
       }
       
-      // Close modal after successful auth (auth state will be updated by AuthProvider)
       setError('')
-      // Add small delay to ensure auth state is updated before closing
       setTimeout(() => {
         onCloseAction()
       }, 100)
@@ -55,99 +57,97 @@ export function AuthModal({ onCloseAction }: AuthModalProps) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
-      onClick={onCloseAction}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="bg-brand-black border border-white/10 w-full max-w-[420px] rounded-[32px] overflow-hidden shadow-2xl relative"
-      >
-          {/* Decorative background */}
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand-blue/20 to-transparent pointer-events-none" />
+    <Dialog open onOpenChange={onCloseAction}>
+      <DialogContent className="bru-card bg-secondary-background max-w-md p-0 overflow-hidden border-2 border-border">
+        <div className="p-8 space-y-6">
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-black tracking-tight">
+              {isSignUp ? 'Create account' : 'Welcome back'}
+            </DialogTitle>
+            <DialogDescription className="text-foreground/70 text-base">
+              {isSignUp ? 'Start your animation journey' : 'Continue your animation adventure'}
+            </DialogDescription>
+          </DialogHeader>
 
-          <div className="p-10 relative z-10">
-            <div className="flex items-center justify-between mb-8">
-              <div className="space-y-1">
-                <h2 className="text-2xl font-sans font-bold tracking-tight">
-                  {isSignUp ? 'Create account' : 'Welcome back'}
-                </h2>
-                <p className="text-dark-400 text-sm font-body">
-                  {isSignUp ? 'Start your journey with MovingLines' : 'Continue your animation adventure'}
-                </p>
-              </div>
-              <button
-                onClick={onCloseAction}
-                className="p-3 rounded-2xl hover:bg-white/5 transition-colors text-dark-400 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <div className="relative group">
-                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 group-focus-within:text-brand-blue transition-colors" />
-                  <input
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-semibold uppercase tracking-tight">
+                  Email address
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50" />
+                  <Input
+                    id="email"
                     type="email"
-                    placeholder="Email address"
+                    placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="input-field input-with-icon"
+                    className="pl-11 h-12 border-2 border-border bru-shadow bg-background focus:shadow-[6px_6px_0_var(--border)] transition-shadow"
                     required
                   />
                 </div>
+              </div>
 
-                <div className="relative group">
-                  <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 group-focus-within:text-brand-blue transition-colors" />
-                  <input
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-semibold uppercase tracking-tight">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50" />
+                  <Input
+                    id="password"
                     type="password"
-                    placeholder="Password"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="input-field input-with-icon"
+                    className="pl-11 h-12 border-2 border-border bru-shadow bg-background focus:shadow-[6px_6px_0_var(--border)] transition-shadow"
                     required
                     minLength={6}
                   />
                 </div>
               </div>
-
-              {error && (
-                <p
-                  className="text-red-400 text-sm font-medium px-2"
-                >
-                  {error}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary w-full flex items-center justify-center gap-3 py-4 text-base"
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-                {isSignUp ? 'Get Started' : 'Sign In'}
-              </button>
-            </form>
-
-            <div className="mt-8 pt-8 border-t border-white/5 text-center">
-              <button
-                onClick={() => {
-                  setIsSignUp(!isSignUp)
-                  setError('')
-                  setEmail('')
-                  setPassword('')
-                }}
-                className="text-dark-400 hover:text-white transition-all text-sm font-medium hover:underline underline-offset-4"
-              >
-                {isSignUp
-                  ? 'Already have an account? Sign in'
-                  : "Don't have an account? Sign up"}
-              </button>
             </div>
+
+            {error && (
+              <div className="bru-card bg-destructive/10 border-destructive p-3">
+                <p className="text-destructive text-sm font-semibold">{error}</p>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bru-button w-full h-12 text-sm"
+            >
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {isSignUp ? 'Get Started' : 'Sign In'}
+            </Button>
+          </form>
+
+          <div className="pt-4 border-t-2 border-border text-center">
+            <button
+              onClick={() => {
+                setIsSignUp(!isSignUp)
+                setError('')
+                setEmail('')
+                setPassword('')
+              }}
+              className="text-sm font-semibold text-foreground/70 hover:text-foreground transition-colors uppercase tracking-tight"
+            >
+              {isSignUp
+                ? 'Already have an account? Sign in'
+                : "Don't have an account? Sign up"}
+            </button>
           </div>
         </div>
-      </div>
+      </DialogContent>
+    </Dialog>
   )
 }
+
 

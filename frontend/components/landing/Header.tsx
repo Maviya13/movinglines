@@ -1,0 +1,110 @@
+'use client'
+
+import Link from 'next/link'
+import { ArrowRight, Menu, Sparkles, X } from 'lucide-react'
+import { useAuth } from '@/components/providers/AuthProvider'
+import { Button } from '@/components/ui/button'
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from '@/components/ui/navigation-menu'
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+
+const navLinks = [
+  { label: 'Features', href: '/features' },
+  { label: 'Showcase', href: '/showcase' },
+  { label: 'Docs', href: '/api/docs' },
+]
+
+export function Header({ onLaunch }: { onLaunch: () => void }) {
+  const { user, signOut } = useAuth()
+
+  return (
+    <header className="sticky top-0 z-40 bg-background/90 backdrop-blur">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-md border-2 border-border bru-shadow bg-secondary flex items-center justify-center">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="leading-tight">
+              <p className="text-xl font-black uppercase tracking-tight">MovingLines</p>
+              <p className="text-xs font-semibold">Neobrutal math engine</p>
+            </div>
+          </Link>
+        </div>
+
+        <div className="hidden lg:flex items-center gap-6">
+          <NavigationMenu>
+            <NavigationMenuList>
+              {navLinks.map((item) => (
+                <NavigationMenuItem key={item.label}>
+                  <NavigationMenuLink className="text-sm font-semibold uppercase tracking-tight border-2 border-border px-3 py-2 rounded-md bru-shadow bg-secondary hover:-translate-y-1 transition-transform" href={item.href}>
+                    {item.label}
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
+
+        <div className="hidden lg:flex items-center gap-3">
+          {user ? (
+            <>
+              <Button variant="ghost" className="bru-ghost text-xs px-4 py-2" onClick={() => signOut()}>
+                Sign out
+              </Button>
+              <Button className="bru-button text-xs" onClick={onLaunch}>
+                Dashboard <ArrowRight className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <Button className="bru-button text-xs" onClick={onLaunch}>
+              Launch app <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" className="lg:hidden bru-ghost px-3 py-2">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="bg-background border-2 border-border">
+            <div className="flex items-center justify-between mb-6">
+              <p className="font-black uppercase tracking-tight">Menu</p>
+              <X className="h-5 w-5" />
+            </div>
+            <div className="flex flex-col gap-3">
+              {navLinks.map((item) => (
+                <SheetClose key={item.label} asChild>
+                  <Link href={item.href} className="bru-card px-3 py-2 text-sm font-semibold">
+                    {item.label}
+                  </Link>
+                </SheetClose>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-col gap-3">
+              {user ? (
+                <SheetClose asChild>
+                  <Button className="bru-button w-full text-sm" onClick={onLaunch}>
+                    Dashboard
+                  </Button>
+                </SheetClose>
+              ) : (
+                <SheetClose asChild>
+                  <Button className="bru-button w-full text-sm" onClick={onLaunch}>
+                    Launch app
+                  </Button>
+                </SheetClose>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </header>
+  )
+}

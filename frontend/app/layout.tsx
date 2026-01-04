@@ -18,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${GeistSans.variable} font-sans bg-black text-white antialiased`}>
+    <html lang="en">
+      <body className={`${GeistSans.variable} font-sans bg-background text-foreground antialiased`}>
         <ErrorBoundary>
           <AuthProvider>
             {children}
