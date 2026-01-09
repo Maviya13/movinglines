@@ -28,7 +28,7 @@ export async function generateAnimation(prompt: string, quality: Quality, durati
       },
       body: JSON.stringify({ prompt, quality, duration, chat_id: chatId })
     })
-    
+
     return await handleResponse(res)
   } catch (error) {
     console.error('Animation generation failed:', error)
@@ -41,7 +41,7 @@ export async function getChats(token: string) {
     const res = await fetch(`${API_URL}/api/animations/chats`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-    
+
     return await handleResponse(res)
   } catch (error) {
     console.error('Failed to get chats:', error)
@@ -55,7 +55,7 @@ export async function deleteChat(chatId: string, token: string) {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     })
-    
+
     return await handleResponse(res)
   } catch (error) {
     console.error('Failed to delete chat:', error)
@@ -68,7 +68,7 @@ export async function getChatHistory(chatId: string, token: string) {
     const res = await fetch(`${API_URL}/api/animations/chats/${chatId}/history`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-    
+
     return await handleResponse(res)
   } catch (error) {
     console.error('Failed to get chat history:', error)
@@ -81,7 +81,7 @@ export async function getTaskStatus(taskId: string, token: string) {
     const res = await fetch(`${API_URL}/api/animations/status/${taskId}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-    
+
     return await handleResponse(res)
   } catch (error) {
     console.error('Failed to get task status:', error)
@@ -94,7 +94,7 @@ export async function getUserVideos(token: string) {
     const res = await fetch(`${API_URL}/api/animations/videos`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-    
+
     return await handleResponse(res)
   } catch (error) {
     console.error('Failed to get videos:', error)
@@ -110,7 +110,7 @@ export async function getVideos(limit = 1000, offset = 0, scope?: 'all') {
     const res = await fetch(`/api/videos${scopeParam}limit=${limit}&offset=${offset}`, {
       credentials: 'include', // Include cookies for auth
     })
-    
+
     return await handleResponse(res)
   } catch (error) {
     console.error('Failed to get videos:', error)
@@ -137,7 +137,7 @@ export async function createVideoRecord(data: {
       credentials: 'include',
       body: JSON.stringify(data),
     })
-    
+
     return await handleResponse(res)
   } catch (error) {
     console.error('Failed to create video record:', error)
@@ -151,7 +151,7 @@ export async function deleteVideo(videoId: string) {
       method: 'DELETE',
       credentials: 'include',
     })
-    
+
     return await handleResponse(res)
   } catch (error) {
     console.error('Failed to delete video:', error)
@@ -164,11 +164,33 @@ export async function getUserStats() {
     const res = await fetch('/api/stats', {
       credentials: 'include',
     })
-    
+
     return await handleResponse(res)
   } catch (error) {
     console.error('Failed to get user stats:', error)
     throw error
   }
+}
+
+export async function cancelAnimation(taskId: string, token: string) {
+  try {
+    const res = await fetch(`${API_URL}/api/animations/cancel/${taskId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    return await handleResponse(res)
+  } catch (error) {
+    console.error('Failed to cancel animation:', error)
+    throw error
+  }
+}
+
+export function getWebSocketURL(clientId: string) {
+  const url = new URL(API_URL)
+  const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${url.host}/api/animations/ws/${clientId}`
 }
 

@@ -1,13 +1,91 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict
 from enum import Enum
 from datetime import datetime
+import json
+import asyncio
+
 from app.services.code_generator import generate_manim_script, generate_improved_code
 from app.services.video_renderer import render_animation
 from app.services.database_service import upload_video, get_user_videos, get_current_user, get_supabase, create_chat_in_db, get_user_chats_from_db, delete_chat_from_db, get_chat_tasks_from_db
 
+# Task cancellation tracking
+cancelled_tasks = set()
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}
+
+    async def connect(self, client_id: str, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections[client_id] = websocket
+        print(f"[WS] Client {client_id} connected. Total active: {len(self.active_connections)}")
+
+    def disconnect(self, client_id: str):
+        if client_id in self.active_connections:
+            del self.active_connections[client_id]
+            print(f"[WS] Client {client_id} disconnected. Total active: {len(self.active_connections)}")
+
+    async def send_personal_message(self, message: dict, client_id: str):
+        if client_id in self.active_connections:
+            websocket = self.active_connections[client_id]
+            try:
+                await websocket.send_json(message)
+                print(f"[WS] Sent update to {client_id}: {message.get('status')} ({message.get('progress')}%)")
+            except Exception as e:
+                print(f"[WS] Error sending message to {client_id}: {e}")
+                self.disconnect(client_id)
+
+    async def broadcast_status(self, task_id: str, status: str, progress: int, video_url: str = None, chat_id: str = None, error: str = None):
+        message = {
+            "task_id": task_id,
+            "status": status,
+            "progress": progress,
+            "video_url": video_url,
+            "chat_id": chat_id,
+            "error": error
+        }
+        # Broadcast to all relevant clients (for now, just all active ones check their task_id)
+        for client_id in list(self.active_connections.keys()):
+            await self.send_personal_message(message, client_id)
+
+manager = ConnectionManager()
+
 router = APIRouter()
+
+@router.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    await manager.connect(client_id, websocket)
+    try:
+        while True:
+            # Keep connection alive and listen for any client messages if needed
+            data = await websocket.receive_text()
+            # For now, we don't expect messages from client, but we keep it open
+    except WebSocketDisconnect:
+        manager.disconnect(client_id)
+
+@router.post("/cancel/{task_id}")
+async def cancel_animation(task_id: str, user_id: str = Depends(get_current_user)):
+    """Cancel a running animation task"""
+    task = get_task_from_db(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    if task["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to cancel this task")
+    
+    if task["status"] in ["completed", "failed", "cancelled"]:
+        return {"status": "error", "message": f"Task is already {task['status']}"}
+    
+    cancelled_tasks.add(task_id)
+    update_task_in_db(task_id, {"status": "cancelled"})
+    print(f"[CANCEL] Task {task_id} marked as cancelled by user {user_id}")
+    
+    # Broadcast cancellation
+    await manager.broadcast_status(task_id, "cancelled", task.get("progress", 0))
+    
+    return {"status": "ok", "message": "Cancellation request received"}
 
 class Quality(str, Enum):
     LOW = "l"      # 420p
@@ -108,14 +186,27 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
     import traceback
     from app.services.video_renderer import sanitize_manim_script
     try:
-        print(f"[{task_id}] Starting animation generation for prompt: {prompt[:50]}...")
+        if task_id in cancelled_tasks:
+            print(f"[{task_id}] Process stopped: task was cancelled before starting.")
+            return
+
+        print(f"[{task_id}] Starting animation generation flow...")
         
         update_task_in_db(task_id, {"status": "generating_script", "progress": 20})
+        await manager.broadcast_status(task_id, "generating_script", 20)
         
+        if task_id in cancelled_tasks:
+            print(f"[{task_id}] Process stopped: task was cancelled.")
+            return
+
         print(f"[{task_id}] Generating Manim script (duration: {duration}s)...")
         script = await generate_manim_script(prompt, duration)
         print(f"[{task_id}] Script generated:\n{script[:200]}...")
         
+        if task_id in cancelled_tasks:
+            logger.info(f"[{task_id}] Process stopped: task was cancelled after script generation.")
+            return
+
         # Sanitize script for Manim CE 0.18 compatibility and persist what will actually render
         script_sanitized = sanitize_manim_script(script)
         update_task_in_db(task_id, {
@@ -123,21 +214,27 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
             "progress": 50,
             "generated_script": script_sanitized
         })
+        await manager.broadcast_status(task_id, "rendering", 50)
         
+        if task_id in cancelled_tasks:
+            logger.info(f"[{task_id}] Process stopped: task was cancelled before starting render.")
+            return
+
         print(f"[{task_id}] Rendering animation...")
         
         try:
             video_path = await render_animation(script_sanitized, quality)
             print(f"[{task_id}] Video rendered at: {video_path}")
         except RuntimeError as render_error:
+            if task_id in cancelled_tasks:
+                logger.info(f"[{task_id}] Process stopped: task was cancelled during initial rendering attempt.")
+                return
+            
             error_str = str(render_error)
-            print(f"[{task_id}] First attempt failed: {error_str[:200]}")
+            logger.warning(f"[{task_id}] First attempt failed: {error_str[:200]}")
             
             # Always attempt self-healing for any rendering error
             print(f"[{task_id}] Attempting self-healing...")
-            
-            # Don't update status to avoid constraint violation
-            # Keep it as rendering while we retry
             
             error_context = {
                 'prompt': prompt,
@@ -146,27 +243,46 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
             }
             
             script = await generate_improved_code(error_context)
+            if task_id in cancelled_tasks:
+                logger.info(f"[{task_id}] Process stopped: task was cancelled during self-healing generation.")
+                return
+
             # Sanitize again and persist
             script_sanitized = sanitize_manim_script(script)
             update_task_in_db(task_id, {"generated_script": script_sanitized})
+            await manager.broadcast_status(task_id, "rendering", 55) # Slight progress bump for retry
             
             print(f"[{task_id}] Retrying with improved code...")
             video_path = await render_animation(script_sanitized, quality)
             print(f"[{task_id}] Retry successful: {video_path}")
         
+        if task_id in cancelled_tasks:
+            logger.info(f"[{task_id}] Process stopped: task was cancelled after rendering completion.")
+            return
+
         update_task_in_db(task_id, {"status": "uploading", "progress": 80})
+        await manager.broadcast_status(task_id, "uploading", 80)
         
         print(f"[{task_id}] Uploading to Supabase...")
         video_url = await upload_video(video_path, user_id, prompt)
         print(f"[{task_id}] Upload complete: {video_url}")
         
+        if task_id in cancelled_tasks:
+            logger.info(f"[{task_id}] Process stopped: task was cancelled after upload.")
+            return
+
         update_task_in_db(task_id, {
             "status": "completed",
             "progress": 100,
             "video_url": video_url
         })
+        await manager.broadcast_status(task_id, "completed", 100, video_url=video_url)
         
     except Exception as e:
+        if task_id in cancelled_tasks:
+            print(f"[{task_id}] Task was cancelled, ignoring error: {e}")
+            return
+
         error_msg = f"{str(e)}\n{traceback.format_exc()}"
         print(f"[{task_id}] ERROR: {error_msg}")
         
@@ -181,6 +297,12 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
             "status": "failed",
             "error_message": user_message
         })
+        await manager.broadcast_status(task_id, "failed", 0, error=user_message)
+    finally:
+        # Cleanup cancellation tracking
+        if task_id in cancelled_tasks:
+            cancelled_tasks.remove(task_id)
+            print(f"[{task_id}] Cleanup: Removed from cancelled_tasks")
 
 @router.get("/status/{task_id}")
 async def get_task_status(task_id: str):

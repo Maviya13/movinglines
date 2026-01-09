@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
-import { generateAnimation, getTaskStatus, getChats, deleteChat, getChatHistory, Quality } from '@/lib/api';
+import { generateAnimation, getTaskStatus, getChats, deleteChat, getChatHistory, Quality, getWebSocketURL, cancelAnimation } from '@/lib/api';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -92,11 +92,12 @@ export default function DashboardPage() {
         setVideoUrl(lastTask.video_url || null);
         setGeneratedCode(lastTask.generated_script || '');
 
-        // Resume polling if not complete
-        if (lastTask.status !== 'completed' && lastTask.status !== 'failed') {
+        // Resume status tracking if not complete
+        if (lastTask.status !== 'completed' && lastTask.status !== 'failed' && lastTask.status !== 'cancelled') {
           setTaskId(lastTask.id);
           setIsGenerating(true);
           setStatus(lastTask.status);
+          setProgress(lastTask.progress || 0);
         } else {
           setTaskId(null);
           setIsGenerating(false);
@@ -133,35 +134,73 @@ export default function DashboardPage() {
     }
   };
 
-  // Polling Logic
+  // WebSocket for Real-time Updates
   useEffect(() => {
-    if (!taskId || !session?.access_token) return;
+    if (!user?.id || !session?.access_token) return;
 
-    const interval = setInterval(async () => {
+    const wsUrl = getWebSocketURL(user.id);
+    const socket = new WebSocket(wsUrl);
+
+    socket.onopen = () => {
+      console.log('[WS] Connected to real-time updates');
+    };
+
+    socket.onmessage = (event) => {
       try {
-        const data = await getTaskStatus(taskId, session.access_token);
+        const data = JSON.parse(event.data);
+        console.log('[WS] Received update:', data);
+
+        // Only care about messages for our current taskId (if we have one)
+        // or messages that tell us about a task we just started
+        if (taskId && data.task_id !== taskId) return;
+
         setStatus(data.status);
-        setProgress(data.progress || 0);
+        if (data.progress !== undefined) setProgress(data.progress);
 
         if (data.status === 'completed') {
-          clearInterval(interval);
           setTaskId(null);
           setIsGenerating(false);
           if (data.video_url) setVideoUrl(data.video_url);
           if (data.generated_script) setGeneratedCode(data.generated_script);
+          loadChats(); // Refresh sidebar to show new chat title if it was first message
         } else if (data.status === 'failed') {
-          clearInterval(interval);
           setError(data.error || 'Generation failed');
+          setTaskId(null);
+          setIsGenerating(false);
+        } else if (data.status === 'cancelled') {
+          setStatus('cancelled');
           setTaskId(null);
           setIsGenerating(false);
         }
       } catch (err) {
-        console.error('Status check failed:', err);
+        console.error('[WS] Failed to parse message:', err);
       }
-    }, 2000);
+    };
 
-    return () => clearInterval(interval);
-  }, [taskId, session?.access_token]);
+    socket.onclose = () => {
+      console.log('[WS] Disconnected');
+    };
+
+    return () => {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    };
+  }, [user?.id, taskId, session?.access_token]);
+
+  const handleCancel = async () => {
+    if (!taskId || !session?.access_token) return;
+
+    try {
+      await cancelAnimation(taskId, session.access_token);
+      setStatus('cancelled');
+      setIsGenerating(false);
+      setTaskId(null);
+    } catch (err) {
+      console.error('Failed to cancel:', err);
+      alert('Failed to cancel animation');
+    }
+  };
 
   const handleGenerate = async () => {
     if (!prompt.trim() || isGenerating || !session?.access_token) return;
@@ -248,6 +287,7 @@ export default function DashboardPage() {
             videoUrl={videoUrl}
             generatedCode={generatedCode}
             handleGenerate={handleGenerate}
+            handleCancel={handleCancel}
           />
         ) : currentView === 'history' ? (
           <HistoryView />

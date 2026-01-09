@@ -20,6 +20,7 @@ interface WorkspaceViewProps {
   videoUrl: string | null
   generatedCode: string
   handleGenerate: () => void
+  handleCancel: () => void
 }
 
 export function WorkspaceView({
@@ -37,6 +38,7 @@ export function WorkspaceView({
   videoUrl,
   generatedCode,
   handleGenerate,
+  handleCancel,
 }: WorkspaceViewProps) {
   const [mobileTab, setMobileTab] = useState<'chat' | 'output'>('chat')
 
@@ -46,17 +48,15 @@ export function WorkspaceView({
       <div className="md:hidden flex h-10 border-b-2 border-border bg-background">
         <button
           onClick={() => setMobileTab('chat')}
-          className={`flex-1 text-xs font-bold uppercase ${
-            mobileTab === 'chat' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'
-          }`}
+          className={`flex-1 text-xs font-bold uppercase ${mobileTab === 'chat' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'
+            }`}
         >
           Studio
         </button>
         <button
           onClick={() => setMobileTab('output')}
-          className={`flex-1 text-xs font-bold uppercase ${
-            mobileTab === 'output' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'
-          }`}
+          className={`flex-1 text-xs font-bold uppercase ${mobileTab === 'output' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'
+            }`}
         >
           Output
         </button>
@@ -69,9 +69,17 @@ export function WorkspaceView({
             {activeChatId ? "Continuing chat session..." : "Engine Initialized. Describe your visualization."}
           </div>
           {isGenerating && (
-            <div className="bru-card p-4 text-sm leading-relaxed flex items-center gap-3">
-              <Loader2 className="animate-spin w-4 h-4" />
-              <span>Generating... {status} ({Math.round(progress)}%)</span>
+            <div className="bru-card p-4 text-sm leading-relaxed flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Loader2 className="animate-spin w-4 h-4" />
+                <span>Generating... {status.replace('_', ' ')} ({Math.round(progress)}%)</span>
+              </div>
+              <button
+                onClick={handleCancel}
+                className="text-[10px] font-black uppercase tracking-wider text-destructive hover:bg-destructive/10 px-2 py-1 rounded border border-destructive/20 transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           )}
           {error && (
@@ -92,11 +100,10 @@ export function WorkspaceView({
                     key={d}
                     onClick={() => setDuration(d)}
                     disabled={isGenerating}
-                    className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${
-                      duration === d
-                        ? 'bg-main text-background bru-shadow'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                    } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${duration === d
+                      ? 'bg-main text-background bru-shadow'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                      } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {d}s
                   </button>
@@ -113,11 +120,10 @@ export function WorkspaceView({
                     key={q}
                     onClick={() => setQuality(q)}
                     disabled={isGenerating}
-                    className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${
-                      quality === q
-                        ? 'bg-mainAccent text-background bru-shadow'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                    } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${quality === q
+                      ? 'bg-mainAccent text-background bru-shadow'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                      } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {q === 'k' ? '4K' : q === 'l' ? '420p' : q === 'm' ? '720p' : '1080p'}
                   </button>
