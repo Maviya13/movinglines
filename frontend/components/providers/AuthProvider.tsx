@@ -9,7 +9,7 @@ type AuthContextType = {
   session: Session | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string) => Promise<{ requiresConfirmation: boolean }>
   signOut: () => Promise<void>
 }
 
@@ -92,11 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({ email, password })
+      const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) throw error
-      // With email confirmations disabled, immediately sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-      if (signInError) throw signInError
+      
+      // Check if email confirmation is required
+      const requiresConfirmation = !data.session
+      
+      return { requiresConfirmation }
     } catch (error) {
       console.error('Sign up error:', error)
       throw error

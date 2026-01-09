@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [message, setMessage] = useState('Finalizing sign-in…')
 
   useEffect(() => {
@@ -13,10 +14,23 @@ export default function AuthCallbackPage() {
 
     const finalizeAuth = async () => {
       try {
-        // Supabase client with detectSessionInUrl=true will process tokens in the URL hash automatically
+        // Check for email confirmation code
+        const code = searchParams.get('code')
+        
+        if (code) {
+          setMessage('Confirming your email...')
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+          if (error) {
+            console.error('Code exchange error:', error)
+            setMessage('Could not confirm email. Please try again.')
+            return
+          }
+        }
+
+        // Get the current session (either from code exchange or from URL hash)
         const { data: { session }, error } = await supabase.auth.getSession()
 
-        // Clean up URL hash so the access token isn't visible
+        // Clean up URL so the code/tokens aren't visible
         if (typeof window !== 'undefined') {
           const cleanUrl = window.location.origin + window.location.pathname
           window.history.replaceState({}, document.title, cleanUrl)
@@ -29,11 +43,12 @@ export default function AuthCallbackPage() {
         }
 
         if (session) {
-          setMessage('Sign-in successful! Redirecting…')
+          setMessage('Email confirmed! Signing you in…')
           // Small delay to show message
           setTimeout(() => router.replace('/'), 500)
         } else {
-          setMessage('No active session found. You can close this window.')
+          setMessage('Email confirmed! You can now sign in.')
+          setTimeout(() => router.replace('/'), 2000)
         }
       } catch (err) {
         console.error('Unexpected auth callback error:', err)
@@ -43,7 +58,7 @@ export default function AuthCallbackPage() {
 
     finalizeAuth()
     return () => { mounted = false }
-  }, [router])
+  }, [router, searchParams])
 
   return (
     <main className="min-h-screen flex items-center justify-center">
