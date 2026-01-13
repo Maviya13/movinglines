@@ -67,6 +67,12 @@ class ConnectionManager:
                     # Potentially disconnect if it failed
                     self.disconnect(user_id, websocket)
 
+    async def send_heartbeat(self, user_id: str, websocket: WebSocket):
+        try:
+            await websocket.send_json({"status": "heartbeat"})
+        except Exception:
+            self.disconnect(user_id, websocket)
+
 manager = ConnectionManager()
 
 router = APIRouter()
@@ -80,20 +86,29 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, token: Option
         return
 
     try:
-        user_id = get_current_user(token)
+        user_id = await get_current_user(token)
     except Exception as e:
         await websocket.accept()
         await websocket.close(code=4002, reason="Invalid token")
         return
 
-    # In our current setup, client_id might just be user_id from frontend, 
-    # but we'll use user_id from token for actual mapping
     await manager.connect(user_id, websocket)
     try:
         while True:
-            # Keep connection alive
-            await websocket.receive_text()
+            # Send heartbeat every 30 seconds to keep connection alive
+            # We use wait_for to check for client messages (unused) with a timeout
+            try:
+                # We don't expect messages, so we just wait and timeout
+                await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+            except asyncio.TimeoutError:
+                # Send heartbeat on timeout
+                await manager.send_heartbeat(user_id, websocket)
+            except Exception:
+                # Any other error means connection is likely closed
+                break
     except WebSocketDisconnect:
+        manager.disconnect(user_id, websocket)
+    finally:
         manager.disconnect(user_id, websocket)
 
 @router.post("/cancel/{task_id}")

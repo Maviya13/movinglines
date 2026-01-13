@@ -160,6 +160,7 @@ export default function DashboardPage() {
 
         // Only care about messages for our current taskId (if we have one)
         // or messages that tell us about a task we just started
+        if (data.status === 'heartbeat') return;
         if (taskId && data.task_id !== taskId) return;
 
         setStatus(data.status);
