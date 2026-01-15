@@ -45,11 +45,11 @@ export default function CodeViewer({ code, filename = 'animation.py' }: CodeView
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-[#1e1e1e] rounded-lg border-2 border-border overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-[#111] rounded-xl border border-white/10 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-b border-gray-700">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#161616] border-b border-white/5">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-gray-400">{filename}</span>
+          <span className="text-xs font-mono text-white/50">{filename}</span>
           <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/20 text-blue-400 rounded">
             Python
           </span>
@@ -57,7 +57,7 @@ export default function CodeViewer({ code, filename = 'animation.py' }: CodeView
         <div className="flex items-center gap-1">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-white/50 hover:text-white hover:bg-white/5 rounded-md transition-colors"
             title="Copy code"
           >
             {copied ? (
@@ -74,7 +74,7 @@ export default function CodeViewer({ code, filename = 'animation.py' }: CodeView
           </button>
           <button
             onClick={handleDownload}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-white/50 hover:text-white hover:bg-white/5 rounded-md transition-colors"
             title="Download as .py file"
           >
             <Download className="w-3.5 h-3.5" />
@@ -84,7 +84,7 @@ export default function CodeViewer({ code, filename = 'animation.py' }: CodeView
       </div>
 
       {/* Code */}
-      <div className="flex-1 min-h-0 overflow-auto">
+      <div className="flex-1 min-h-0 overflow-auto code-scrollbar">
         <Highlight theme={themes.vsDark} code={code.trim()} language="python">
           {({ className, style, tokens, getLineProps, getTokenProps }) => (
             <pre

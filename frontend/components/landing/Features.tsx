@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Cpu, ShieldCheck, Sparkles, Wand2 } from 'lucide-react'
+import { ArrowRight, Cpu, ShieldCheck, Sparkles, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -30,29 +30,39 @@ const features = [
 
 export function Features() {
   return (
-    <section id="features" className="w-full px-6 md:px-12 py-12 md:py-16 space-y-6 md:space-y-8">
-      <div className="flex items-center justify-between gap-3 md:gap-4 flex-wrap">
-        <div>
-          <p className="bru-badge text-xs md:text-sm">Capabilities</p>
-          <h2 className="text-2xl md:text-3xl lg:text-4xl mt-2 md:mt-3 font-black">Opinionated defaults, brutalist clarity.</h2>
-        </div>
-        <Button variant="outline" className="bru-ghost" asChild>
-          <Link href="/showcase">See showcase</Link>
-        </Button>
-      </div>
+    <section id="features" className="w-full px-6 py-24 md:py-32 bg-black relative overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {features.map((feature) => (
-          <Card key={feature.title} className="bru-card h-full">
-            <CardHeader className="pb-2 flex flex-row items-center gap-2 md:gap-3">
-              <feature.icon className="h-4 w-4 md:h-5 md:w-5" />
-              <CardTitle className="text-base md:text-lg">{feature.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs md:text-sm leading-relaxed text-foreground/80">{feature.body}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="max-w-7xl mx-auto space-y-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <p className="text-[11px] font-medium tracking-[0.2em] text-blue-400 uppercase">Capabilities</p>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium tracking-tight text-white/90">
+              Built for precision, <br /> designed for the vibe.
+            </h2>
+          </div>
+          <Link
+            href="/showcase"
+            className="text-sm text-white/40 hover:text-white transition-colors flex items-center gap-2 group"
+          >
+            Explore all features
+            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/5 border border-white/5 rounded-[4px] overflow-hidden">
+          {features.map((feature) => (
+            <div key={feature.title} className="bg-black p-8 md:p-10 space-y-6 transition-colors hover:bg-white/[0.02]">
+              <div className="h-10 w-10 rounded-[2px] bg-white/5 border border-white/10 flex items-center justify-center">
+                <feature.icon className="h-5 w-5 text-white/70" />
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-lg font-medium text-white/90">{feature.title}</h3>
+                <p className="text-sm leading-relaxed text-white/40">{feature.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )

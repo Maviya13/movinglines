@@ -7,10 +7,28 @@ import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 import { SponsorButton } from '@/components/SponsorButton'
 
 export const metadata: Metadata = {
-  title: 'MovingLines | AI-Powered Math Animations',
-  description: 'Transform complex equations into beautiful Manim animations in seconds using AI.',
+  title: 'MovingLines - Animation Engine',
+  description: 'Transform complex mathematical concepts into beautiful animations using AI. Create stunning Manim visualizations with natural language.',
+  keywords: ['manim', 'animation', 'math', 'visualization', 'AI', 'education', 'creative'],
+  authors: [{ name: 'MovingLines' }],
+  creator: 'MovingLines',
   icons: {
-    icon: '/favicon.svg',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/logo.png',
+  },
+  openGraph: {
+    title: 'MovingLines - Animation Engine',
+    description: 'Transform complex mathematical concepts into beautiful animations using AI.',
+    url: 'https://movinglines.co.in',
+    siteName: 'MovingLines',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MovingLines - Animation Engine',
+    description: 'Transform complex mathematical concepts into beautiful animations using AI.',
   },
 }
 

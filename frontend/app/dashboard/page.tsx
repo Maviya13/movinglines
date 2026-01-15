@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
-import { generateAnimation, getTaskStatus, getChats, deleteChat, getChatHistory, Quality, getWebSocketURL, cancelAnimation } from '@/lib/api';
+import { generateAnimation, getTaskStatus, getChats, deleteChat, getChatHistory, Quality, getSocketURL } from '@/lib/api';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -46,9 +47,11 @@ export default function DashboardPage() {
   const [quality, setQuality] = useState<Quality>('m');
   const [duration, setDuration] = useState<number>(15);
   const [taskId, setTaskId] = useState<string | null>(null);
+  const taskIdRef = useRef<string | null>(null); // Ref to track taskId in WebSocket handler
   const [status, setStatus] = useState<string>('');
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+  const [wsConnected, setWsConnected] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [generatedCode, setGeneratedCode] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -101,7 +104,7 @@ export default function DashboardPage() {
         setGeneratedCode(lastTask.generated_script || '');
 
         // Resume status tracking if not complete
-        if (lastTask.status !== 'completed' && lastTask.status !== 'failed' && lastTask.status !== 'cancelled') {
+        if (lastTask.status !== 'completed' && lastTask.status !== 'failed') {
           setTaskId(lastTask.id);
           setIsGenerating(true);
           setStatus(lastTask.status);
@@ -142,74 +145,134 @@ export default function DashboardPage() {
     }
   };
 
-  // WebSocket for Real-time Updates
+  // Sync taskIdRef with taskId state
   useEffect(() => {
-    if (!user?.id || !session?.access_token) return;
+    taskIdRef.current = taskId;
+  }, [taskId]);
 
-    const wsUrl = getWebSocketURL(user.id, session.access_token);
-    const socket = new WebSocket(wsUrl);
+  const socketRef = useRef<any>(null);
 
-    socket.onopen = () => {
-      console.log('[WS] Connected to real-time updates');
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('[WS] Received update:', data);
-
-        // Only care about messages for our current taskId (if we have one)
-        // or messages that tell us about a task we just started
-        if (data.status === 'heartbeat') return;
-        if (taskId && data.task_id !== taskId) return;
-
-        setStatus(data.status);
-        if (data.progress !== undefined) setProgress(data.progress);
-
-        if (data.status === 'completed') {
-          setTaskId(null);
-          setIsGenerating(false);
-          if (data.video_url) setVideoUrl(data.video_url);
-          if (data.generated_script) setGeneratedCode(data.generated_script);
-          loadChats(); // Refresh sidebar to show new chat title if it was first message
-        } else if (data.status === 'failed') {
-          setError(data.error || 'Generation failed');
-          setTaskId(null);
-          setIsGenerating(false);
-        } else if (data.status === 'cancelled') {
-          setStatus('cancelled');
-          setTaskId(null);
-          setIsGenerating(false);
-        }
-      } catch (err) {
-        console.error('[WS] Failed to parse message:', err);
+  // Socket.IO for Real-time Updates - ONLY when actively generating
+  useEffect(() => {
+    // Only connect if we are actively generating AND have a taskId to track
+    if (!user?.id || !session?.access_token || !isGenerating || !taskId) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
       }
+      setWsConnected(false);
+      return;
+    }
+
+    // Prevent multiple connections
+    if (socketRef.current?.connected) return;
+
+    const socketUrl = getSocketURL();
+    const socket = io(socketUrl, {
+      reconnectionAttempts: 10,
+      reconnectionDelay: 2000,
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      socket.emit('authenticate', { token: session.access_token });
+    });
+
+    socket.on('authenticated', (data: any) => {
+      setWsConnected(true);
+    });
+
+    socket.on('status_update', (data: any) => {
+      const currentTaskId = taskIdRef.current;
+      if (currentTaskId && data.task_id !== currentTaskId) return;
+
+      setStatus(data.status);
+      if (data.progress !== undefined) setProgress(data.progress);
+
+      if (data.status === 'completed') {
+        handleTaskCompletion(data);
+      } else if (data.status === 'failed') {
+        handleTaskFailure(data);
+      }
+    });
+
+    socket.on('connect_error', (err: any) => {
+      // Reconnection logic handled by socket.io-client
+    });
+
+    socket.on('error', (data: any) => {
+      console.error('[Socket.IO] Server reported error:', data.message);
+      setError(data.message);
+    });
+
+    socket.on('disconnect', (reason: string) => {
+      setWsConnected(false);
+    });
+
+    const handleTaskCompletion = (data: any) => {
+      setTaskId(null);
+      taskIdRef.current = null;
+      setIsGenerating(false);
+      if (data.video_url) setVideoUrl(data.video_url);
+      if (data.generated_script) setGeneratedCode(data.generated_script);
+      loadChats();
     };
 
-    socket.onclose = () => {
-      console.log('[WS] Disconnected');
+    const handleTaskFailure = (data: any) => {
+      setError(data.error || 'Generation failed');
+      setTaskId(null);
+      taskIdRef.current = null;
+      setIsGenerating(false);
     };
 
     return () => {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.close();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
       }
     };
-  }, [user?.id, taskId, session?.access_token]);
+  }, [user?.id, session?.access_token, isGenerating, taskId]);
 
-  const handleCancel = async () => {
-    if (!taskId || !session?.access_token) return;
+  // Polling Fallback (Every 10s if generating but no WS updates)
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout;
 
-    try {
-      await cancelAnimation(taskId, session.access_token);
-      setStatus('cancelled');
-      setIsGenerating(false);
-      setTaskId(null);
-    } catch (err) {
-      console.error('Failed to cancel:', err);
-      alert('Failed to cancel animation');
+    if (isGenerating && taskId) {
+      pollInterval = setInterval(async () => {
+        console.log('[Dashboard] Safety poll for task:', taskId);
+        try {
+          const task = await getTaskStatus(taskId, session?.access_token!);
+
+          // Only update if it's still for the current task
+          if (taskIdRef.current === taskId) {
+            setStatus(task.status);
+            setProgress(task.progress || 0);
+
+            if (task.status === 'completed') {
+              setTaskId(null);
+              taskIdRef.current = null;
+              setIsGenerating(false);
+              if (task.video_url) setVideoUrl(task.video_url);
+              if (task.generated_script) setGeneratedCode(task.generated_script);
+              loadChats();
+            } else if (task.status === 'failed') {
+              setError(task.error || 'Generation failed');
+              setTaskId(null);
+              taskIdRef.current = null;
+              setIsGenerating(false);
+            }
+          }
+        } catch (err) {
+          console.error('[Dashboard] Polling failed:', err);
+        }
+      }, 10000);
     }
-  };
+
+    return () => clearInterval(pollInterval);
+  }, [isGenerating, taskId, session?.access_token]);
+
+
 
   const handleGenerate = async () => {
     if (!prompt.trim() || isGenerating || !session?.access_token) return;
@@ -223,6 +286,7 @@ export default function DashboardPage() {
     try {
       const data = await generateAnimation(prompt, quality, duration, session.access_token, activeChatId || undefined);
       setTaskId(data.task_id);
+      taskIdRef.current = data.task_id; // Sync ref immediately
 
       if (!activeChatId && data.chat_id) {
         setActiveChatId(data.chat_id);
@@ -241,25 +305,17 @@ export default function DashboardPage() {
     setGeneratedCode('');
     setError('');
     setTaskId(null);
+    taskIdRef.current = null; // Sync ref immediately
     setIsGenerating(false);
+    setCurrentView('workspace');
   };
 
 
   if (loading) return <div className="h-screen bg-background flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
   if (!user) return null;
 
-  // Show chat loading/error state above sidebar
-  const chatStatus = (
-    <>
-      {chatsLoading && <div className="text-xs text-muted-foreground px-4 py-2">Loading chats...</div>}
-      {chatsError && <div className="text-xs text-destructive px-4 py-2">{chatsError}</div>}
-    </>
-  );
-
   return (
     <SidebarProvider>
-      {/* Show chat loading/error above sidebar */}
-      {chatStatus}
       <AppSidebar
         currentView={currentView}
         setCurrentView={setCurrentView}
@@ -270,20 +326,24 @@ export default function DashboardPage() {
         handleDeleteChat={handleDeleteChat}
       />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b-2 border-border bru-shadow bg-background transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-white/5 bg-[#0a0a0a] transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
+            <SidebarTrigger
+              className="-ml-1 text-white/50 hover:text-white"
+              aria-label="Toggle sidebar"
+              title="Toggle sidebar"
+            />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/dashboard" className="font-bold text-xs uppercase">
+                  <BreadcrumbLink href="/dashboard" className="text-sm text-white/50 hover:text-white">
                     Dashboard
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbSeparator className="hidden md:block text-white/20" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage className="font-bold text-xs uppercase">
-                    {currentView === 'workspace' ? 'Workspace' : currentView === 'templates' ? 'Templates' : 'History'}
+                  <BreadcrumbPage className="text-sm font-medium text-white">
+                    {currentView === 'workspace' ? 'Create' : currentView === 'templates' ? 'Templates' : 'History'}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
@@ -307,7 +367,6 @@ export default function DashboardPage() {
             videoUrl={videoUrl}
             generatedCode={generatedCode}
             handleGenerate={handleGenerate}
-            handleCancel={handleCancel}
           />
         ) : currentView === 'history' ? (
           <HistoryView />

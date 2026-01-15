@@ -26,12 +26,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })
-
-      if (!response.ok) {
-        console.error('Failed to sync user to database')
-      }
-    } catch (error) {
-      console.error('Error syncing user:', error)
+      // Silently fail if backend isn't available
+      if (!response.ok) return
+    } catch {
+      // Silently fail - backend might not be running
     }
   }
 
@@ -100,6 +98,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       })
       if (error) throw error
+
+      // Check if user already exists - Supabase returns empty identities for existing users
+      // This is because Supabase doesn't reveal if email exists for security reasons
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        throw new Error('An account with this email already exists. Please sign in instead.')
+      }
 
       // Check if email confirmation is required
       const requiresConfirmation = !data.session

@@ -28,16 +28,10 @@ export default function LandingPage() {
 
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-black text-white selection:bg-blue-500/30">
       <Header onLaunchAction={onLaunch} />
 
-      <main className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 opacity-40">
-          <div className="absolute -top-16 -left-10 h-48 w-48 rounded-full bg-primary/20 blur-3xl" />
-          <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
-          <div className="absolute top-1/3 left-1/3 h-52 w-52 border-4 border-dashed border-border rotate-6" />
-        </div>
-
+      <main className="relative">
         <Hero onLaunchAction={onLaunch} />
         <Features />
         <Showcase />

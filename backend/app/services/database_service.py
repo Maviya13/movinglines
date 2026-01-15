@@ -13,60 +13,71 @@ _supabase_client: Client = None
 def get_supabase() -> Client:
     global _supabase_client
     if _supabase_client is None:
-        url = os.getenv("SUPABASE_URL")
+        url = os.getenv("SUPABASE_URL", "")
+        if url and not url.endswith("/"):
+            url += "/"
         key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
-        print(f"[Supabase] URL: {url[:30] if url else None}...")
-        print(f"[Supabase] Using key starting with: {key[:5] if key else None}...") # Log key prefix for debugging
         if url and key:
             _supabase_client = create_client(url, key)
         else:
             raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or ANON_KEY) must be set")
     return _supabase_client
 
-async def get_current_user(authorization: str = Header(None)) -> str:
-    """Extract and validate user from JWT token."""
+async def get_current_user(authorization: str = Header(None)) -> tuple[str, str]:
+    """Extract and validate user ID and email from JWT token."""
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header required")
     
     try:
         token = authorization.replace("Bearer ", "")
-        # Decode JWT without verification to get user_id (Supabase handles auth)
+        # Decode JWT without verification to get user identity (Supabase handles auth)
         payload = jwt.decode(token, options={"verify_signature": False})
         user_id = payload.get("sub")
+        email = payload.get("email")
+        
         if user_id:
-            return user_id
+            return user_id, email or f"{user_id}@unknown.com"
+            
         raise HTTPException(status_code=401, detail="Invalid token")
-    except jwt.DecodeError as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token format")
+    except jwt.DecodeError:
+        raise HTTPException(status_code=401, detail="Invalid token format")
     except Exception as e:
         print(f"Auth error: {e}")
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
 
-async def ensure_user_exists(user_id: str) -> None:
+async def ensure_user_exists(user_id: str, email: str = None) -> bool:
     """Ensure user exists in public.users table, creating if necessary."""
     client = get_supabase()
     
     try:
-        # Check if user exists
+        # 1. Check if user exists by ID
         result = client.table("users").select("id").eq("id", user_id).execute()
+        if result.data:
+            return True
         
-        if not result.data:
-            # User doesn't exist, get email from auth.users
-            auth_user = client.auth.admin.get_user_by_id(user_id)
-            email = auth_user.user.email if auth_user and auth_user.user else f"{user_id}@unknown.com"
+        # 2. User doesn't exist - create new record
+        # Use a unique email to avoid conflicts (append user_id if email already taken)
+        safe_email = email or f"{user_id}@unknown.com"
+        
+        # Check if email is already used
+        if email:
+            email_check = client.table("users").select("id").eq("email", email).execute()
+            if email_check.data:
+                # Email is taken by different user - use a unique variant
+                safe_email = f"{user_id}@user.movinglines.app"
+        
+        client.table("users").insert({
+            "id": user_id,
+            "email": safe_email,
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat()
+        }).execute()
+        return True
             
-            # Create user record
-            client.table("users").insert({
-                "id": user_id,
-                "email": email,
-                "created_at": datetime.utcnow().isoformat(),
-                "updated_at": datetime.utcnow().isoformat()
-            }).execute()
-            
-            print(f"[Supabase] Created user record for {user_id} ({email})")
     except Exception as e:
-        print(f"[Supabase] Error ensuring user exists: {e}")
-        # Continue anyway - the error will surface on video insert if user still doesn't exist
+        print(f"[Supabase] User sync failed: {e}")
+        # Return False to indicate failure - caller should handle this
+        return False
 
 
 async def upload_video(video_path: str, user_id: str, prompt: str) -> str:
@@ -81,12 +92,17 @@ async def upload_video(video_path: str, user_id: str, prompt: str) -> str:
     file_name = f"{user_id}/{video_id}.mp4"
     
     # Upload to storage
-    with open(video_path, "rb") as f:
-        client.storage.from_(bucket).upload(
-            file_name,
-            f,
-            {"content-type": "video/mp4"}
-        )
+    try:
+        with open(video_path, "rb") as f:
+            client.storage.from_(bucket).upload(
+                path=file_name,
+                file=f,
+                file_options={"content-type": "video/mp4"}
+            )
+    except Exception as e:
+        if "Expecting value" in str(e):
+            raise RuntimeError(f"Upload failed - check bucket '{bucket}' exists and has correct permissions")
+        raise e
     
     # Get public URL
     video_url = client.storage.from_(bucket).get_public_url(file_name)

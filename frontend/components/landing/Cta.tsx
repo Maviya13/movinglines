@@ -5,23 +5,37 @@ import { Button } from '@/components/ui/button'
 
 export function Cta({ onLaunchAction }: { onLaunchAction: () => void }) {
   return (
-    <section className="w-full px-6 md:px-12 py-12 md:py-16">
-      <div className="bru-card p-6 md:p-8 lg:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
-        <div className="space-y-2 md:space-y-3">
-          <p className="bru-badge text-xs md:text-sm">Ready to build</p>
-          <h3 className="text-2xl md:text-3xl font-black">Launch a scene in under a minute.</h3>
-          <p className="text-sm md:text-base text-foreground/80 max-w-2xl">
-            Sign in, drop a prompt, and watch the renderer queue your first cut. The brutalist UI keeps every control obvious and auditable.
+    <section className="w-full px-6 py-24 md:py-32 bg-black">
+      <div className="max-w-5xl mx-auto dark-card p-10 md:p-16 text-center space-y-8 relative overflow-hidden group">
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+        <div className="space-y-4 relative z-10">
+          <p className="text-[11px] font-medium tracking-[0.2em] text-blue-400 uppercase">Ready to Start?</p>
+          <h3 className="text-3xl md:text-5xl font-medium tracking-tight text-white/90">
+            Create your first scene <br className="hidden md:block" /> in under a minute.
+          </h3>
+          <p className="text-sm md:text-lg text-white/40 max-w-xl mx-auto leading-relaxed">
+            Join the new wave of technical creators using generative AI to skip the boilerplate and ship the vibe.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-2 md:gap-3">
-          <Button className="bru-button w-full sm:w-auto" onClick={onLaunchAction}>
-            Launch now
-          </Button>
-          <Button variant="outline" className="bru-ghost w-full sm:w-auto" asChild>
-            <Link href="mailto:team@movinglines.app">Book a demo</Link>
-          </Button>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
+          <button
+            className="btn-primary h-12 px-10 text-[15px]"
+            onClick={onLaunchAction}
+          >
+            Launch Studio
+          </button>
+          <Link
+            href="mailto:team@movinglines.app"
+            className="btn-ghost h-12 px-10 text-[15px]"
+          >
+            Contact Team
+          </Link>
         </div>
+
+        {/* Subtle Decorative Glow */}
+        <div className="absolute -bottom-24 -right-24 w-64 h-64 glow-effect transition-transform group-hover:scale-110 duration-700" />
       </div>
     </section>
   )

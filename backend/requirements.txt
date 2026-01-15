@@ -1,5 +1,4 @@
 fastapi==0.109.0
-uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 manim==0.18.0
 langchain==0.2.16
@@ -15,3 +14,10 @@ pydantic-settings>=2.0.0
 aiofiles>=23.2.1
 httpx>=0.26.0
 google-generativeai>=0.7,<0.8
+uvicorn[standard]>=0.35.0
+python-socketio[asyncio]>=5.11.0
+bidict>=0.23.0
+python-engineio>=4.11.0
+PyJWT>=2.8.0
+numpy>=1.24.0
+scipy>=1.10.0

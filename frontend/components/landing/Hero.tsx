@@ -1,76 +1,114 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Github, PlayCircle, Wand2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
+import { ArrowRight, ChevronDown, Paperclip, Plus, Settings2 } from 'lucide-react'
+
+const categories = [
+  { label: 'calculus', color: 'bg-blue-500' },
+  { label: 'geometry', color: 'bg-pink-500' },
+  { label: 'algebra', color: 'bg-orange-500' },
+  { label: 'physics', color: 'bg-green-500' },
+  { label: 'complex', color: 'bg-purple-500' },
+  { label: 'anything', color: 'bg-yellow-500', icon: '✨' },
+]
 
 export function Hero({ onLaunchAction }: { onLaunchAction: () => void }) {
+  const [prompt, setPrompt] = useState('')
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (prompt.trim()) {
+      onLaunchAction()
+    }
+  }
+
   return (
-    <section className="relative w-full px-6 md:px-12 pt-12 pb-8 md:pt-16 md:pb-12 lg:pt-24 lg:pb-20">
-      <div className="inline-flex items-center gap-2 md:gap-3 bru-badge mb-4 md:mb-6 text-xs md:text-sm">
-        <span className="inline-flex h-2 w-2 md:h-3 md:w-3 rounded-full bg-destructive" />
-        EARLY ACCESS
-      </div>
+    <section className="relative w-full min-h-screen flex flex-col items-center justify-center px-6 pt-32 pb-20 overflow-hidden grid-pattern">
+      {/* Radial Glows */}
+      <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] glow-effect pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] glow-effect pointer-events-none opacity-10" />
 
-      <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6 md:gap-8 lg:gap-10 items-center">
-        <div className="space-y-4 md:space-y-6">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl leading-[1.05] font-black">
-            Neobrutalist playground for math-powered animations.
-          </h1>
-          <p className="text-base md:text-lg text-foreground/80 max-w-2xl">
-            Describe, iterate, and render Manim scenes with confident defaults, auditable prompts, and a UI that stays out of your way.
-          </p>
+      <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center text-center space-y-8 animate-fade-in">
 
-          <div className="flex flex-wrap gap-3">
-            <Button className="bru-button" onClick={onLaunchAction}>
-              Launch the studio <ArrowRight className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" className="bru-ghost" asChild>
-              <a href="https://github.com/piyushdhoka/movinglines" target="_blank" rel="noreferrer">
-                <Github className="h-4 w-4" /> Star on GitHub
-              </a>
-            </Button>
-          </div>
+        {/* Download Button */}
+        <button className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/10 bg-black/50 text-white/90 text-sm font-medium hover:border-white/20 transition-colors">
+          Launch MovingLines
+          <ChevronDown className="h-4 w-4 text-white/50" />
+        </button>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3 pt-3 md:pt-4">
-            {[['3x', 'Faster iteration'], ['0 setup', 'Bun + Next ready'], ['99.9%', 'Render uptime'], ['SOC2', 'Ready controls']].map(([label, sub]) => (
-              <Card key={label} className="bru-card">
-                <CardContent className="p-2 md:p-3">
-                  <p className="text-lg md:text-xl font-black">{label}</p>
-                  <p className="text-[10px] md:text-xs uppercase font-semibold tracking-tight">{sub}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+        {/* Main Heading */}
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tight bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent">
+          The Vibe Coding Studio
+        </h1>
 
-        <div className="bru-card bg-secondary p-4 md:p-6 space-y-3 md:space-y-4">
-          <div className="flex items-center justify-between gap-2">
-            <Badge className="bru-badge text-xs">Prompt</Badge>
-            <Badge className="bru-badge bg-main text-main-foreground text-xs">Live render</Badge>
-          </div>
-          <div className="rounded-lg border-2 border-border p-3 md:p-4 bg-background min-h-[120px] md:min-h-[140px] flex items-center text-left text-sm md:text-base leading-relaxed">
-            "Simulate a Riemann surface folding into a torus. Track a red geodesic, label critical points, and keep camera easing at 1.4."
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bru-card p-4 flex items-center gap-3">
-              <PlayCircle className="h-6 w-6" />
-              <div>
-                <p className="text-sm font-semibold">Queued render</p>
-                <p className="text-xs text-foreground/70">GPU slot reserved</p>
+        {/* Category Badges */}
+        <p className="text-base text-white/50">
+          The best way to build{' '}
+          {categories.map((cat, i) => (
+            <span key={cat.label}>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-black ${cat.color}`}>
+                {cat.label}
+                {cat.icon && <span>{cat.icon}</span>}
+              </span>
+              {i < categories.length - 1 && <span className="text-white/30">, </span>}
+            </span>
+          ))}
+          {' '}with AI
+        </p>
+
+        {/* Central Prompt Input */}
+        <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-8">
+          <div className="dark-card rounded-lg overflow-hidden">
+            <div className="p-4">
+              <input
+                id="hero-prompt"
+                name="prompt"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Ask MovingLines to build anything..."
+                aria-label="Ask MovingLines to build anything"
+                className="w-full bg-transparent text-white/90 text-base placeholder:text-white/30 outline-none"
+              />
+            </div>
+
+            {/* Input Controls */}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-white/5">
+              <div className="flex items-center gap-2">
+                <button type="button" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-white/10 bg-white/5 text-white/70 text-xs font-medium hover:border-white/20 transition-colors">
+                  <Settings2 className="h-3.5 w-3.5" />
+                  Auto
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+                <button type="button" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-white/10 bg-white/5 text-white/70 text-xs font-medium hover:border-white/20 transition-colors">
+                  <Settings2 className="h-3.5 w-3.5" />
+                  Tools
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="p-2 rounded-md text-white/30 hover:text-white/60 transition-colors"
+                  aria-label="Attach file"
+                  title="Attach file"
+                >
+                  <Paperclip className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="p-2 rounded-md text-white/30 hover:text-white/60 transition-colors"
+                  aria-label="Add element"
+                  title="Add element"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                </button>
               </div>
             </div>
-            <div className="bru-card p-4 flex items-center gap-3">
-              <Wand2 className="h-6 w-6" />
-              <div>
-                <p className="text-sm font-semibold">Autofix ready</p>
-                <p className="text-xs text-foreground/70">Compile checks enabled</p>
-              </div>
-            </div>
+
+
           </div>
-        </div>
+        </form>
       </div>
     </section>
   )

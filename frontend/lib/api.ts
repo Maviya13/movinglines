@@ -172,25 +172,9 @@ export async function getUserStats() {
   }
 }
 
-export async function cancelAnimation(taskId: string, token: string) {
-  try {
-    const res = await fetch(`${API_URL}/api/animations/cancel/${taskId}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
 
-    return await handleResponse(res)
-  } catch (error) {
-    console.error('Failed to cancel animation:', error)
-    throw error
-  }
-}
 
-export function getWebSocketURL(clientId: string, token: string) {
-  const url = new URL(API_URL)
-  const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
-  return `${protocol}//${url.host}/api/animations/ws/${clientId}?token=${token}`
+export function getSocketURL() {
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 }
 

@@ -21,34 +21,45 @@ const showcases = [
   },
 ]
 
+import { ArrowRight, Play, Sparkles } from 'lucide-react'
+
 export function Showcase() {
   return (
-    <section id="showcase" className="w-full px-6 md:px-12 py-12 md:py-16 space-y-6 md:space-y-10">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <p className="bru-badge text-xs md:text-sm">Showcase</p>
-          <h2 className="text-2xl md:text-3xl lg:text-4xl mt-2 md:mt-3 font-black">Scenes you can ship today.</h2>
+    <section id="showcase" className="w-full px-6 py-24 md:py-32 bg-[#050505]">
+      <div className="max-w-7xl mx-auto space-y-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 text-left">
+          <div className="space-y-4">
+            <p className="text-[11px] font-medium tracking-[0.2em] text-white/30 uppercase">In Action</p>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium tracking-tight text-white/90">
+              Scenes you can ship today.
+            </h2>
+          </div>
+          <p className="text-sm text-white/40 max-w-sm">
+            High-fidelity mathematical visualizations, optimized for the browser and ready for production.
+          </p>
         </div>
-        <Badge className="bru-badge text-xs md:text-sm">Works with Manim</Badge>
-      </div>
 
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-        {showcases.map((item) => (
-          <Card key={item.title} className="bru-card h-full bg-secondary">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-start sm:items-center justify-between gap-2 text-base md:text-lg">
-                <span>{item.title}</span>
-                <span className="text-[10px] md:text-xs uppercase font-bold whitespace-nowrap">{item.accent}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 md:space-y-3">
-              <div className="aspect-video rounded-md border-2 border-border bg-gradient-to-br from-background to-secondary flex items-center justify-center text-xs md:text-sm font-semibold">
-                Preview placeholder
+        <div className="grid md:grid-cols-3 gap-6">
+          {showcases.map((item) => (
+            <div key={item.title} className="dark-card p-1 group">
+              <div className="aspect-video bg-black/50 overflow-hidden relative border border-white/5">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity">
+                  <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <Play className="h-4 w-4 fill-white text-white" />
+                  </div>
+                </div>
               </div>
-              <p className="text-xs md:text-sm leading-relaxed text-foreground/80">{item.description}</p>
-            </CardContent>
-          </Card>
-        ))}
+              <div className="p-6 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[15px] font-medium text-white/90">{item.title}</h3>
+                  <span className="text-[10px] text-white/30 font-mono">{item.accent}</span>
+                </div>
+                <p className="text-sm text-white/40 leading-relaxed">{item.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )

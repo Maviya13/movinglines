@@ -94,13 +94,13 @@ async def render_animation(script: str, quality: str = "m") -> str:
         
         print(f"[Manim] Found video at: {video_path}")
         
-        # Move to persistent location
-        output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "media", "videos")
-        os.makedirs(output_dir, exist_ok=True)
-        final_path = os.path.join(output_dir, f"{script_id}_{scene_name}.mp4")
+        # Move to a storage location outside the project root to avoid uvicorn --reload loops
+        storage_dir = os.path.join(tempfile.gettempdir(), "movinglines_renders")
+        os.makedirs(storage_dir, exist_ok=True)
+        final_path = os.path.join(storage_dir, f"{script_id}_{scene_name}.mp4")
         shutil.copy2(video_path, final_path)
         
-        print(f"[Manim] Copied to: {final_path}")
+        print(f"[Manim] Saved for upload at: {final_path}")
         
         return final_path
         

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, Query
 from pydantic import BaseModel
 from typing import Optional, List, Dict
 from enum import Enum
@@ -8,45 +8,25 @@ import asyncio
 
 from app.services.code_generator import generate_manim_script, generate_improved_code
 from app.services.video_renderer import render_animation
-from app.services.database_service import upload_video, get_user_videos, get_current_user, get_supabase, create_chat_in_db, get_user_chats_from_db, delete_chat_from_db, get_chat_tasks_from_db
+from app.services.database_service import upload_video, get_user_videos, get_current_user, get_supabase, create_chat_in_db, get_user_chats_from_db, delete_chat_from_db, get_chat_tasks_from_db, ensure_user_exists
 
 import logging
 logger = logging.getLogger(__name__)
 
-# Task cancellation tracking (uses DB for cross-worker persistence)
+# Task management
 
-def is_task_cancelled(task_id: str) -> bool:
-    """Check if task is marked as cancelled in DB"""
-    task = get_task_from_db(task_id)
-    return task and task.get("status") == "cancelled"
-
+# Task management
 class ConnectionManager:
     def __init__(self):
-        # user_id -> list[WebSocket]
-        self.active_connections: Dict[str, List[WebSocket]] = {}
-
-    async def connect(self, user_id: str, websocket: WebSocket):
-        await websocket.accept()
-        if user_id not in self.active_connections:
-            self.active_connections[user_id] = []
-        self.active_connections[user_id].append(websocket)
-        print(f"[WS] User {user_id} connected. Connection count for user: {len(self.active_connections[user_id])}")
-
-    def disconnect(self, user_id: str, websocket: WebSocket):
-        if user_id in self.active_connections:
-            if websocket in self.active_connections[user_id]:
-                self.active_connections[user_id].remove(websocket)
-            if not self.active_connections[user_id]:
-                del self.active_connections[user_id]
-        print(f"[WS] User {user_id} disconnected.")
-
-    async def send_personal_message(self, message: dict, websocket: WebSocket):
-        try:
-            await websocket.send_json(message)
-        except Exception as e:
-            print(f"[WS] Error sending message: {e}")
+        self.sio = None
+    
+    def set_sio(self, sio):
+        self.sio = sio
 
     async def broadcast_status(self, user_id: str, task_id: str, status: str, progress: int, video_url: str = None, chat_id: str = None, error: str = None):
+        if not self.sio:
+            return
+            
         message = {
             "task_id": task_id,
             "status": status,
@@ -56,81 +36,40 @@ class ConnectionManager:
             "error": error
         }
         
-        if user_id in self.active_connections:
-            print(f"[WS] Broadcasting to user {user_id}: {status} ({progress}%)")
-            # We iterate over a copy of the list to avoid issues if a connection is removed during iteration
-            for websocket in list(self.active_connections[user_id]):
-                try:
-                    await websocket.send_json(message)
-                except Exception as e:
-                    print(f"[WS] Failed to send to a connection for user {user_id}: {e}")
-                    # Potentially disconnect if it failed
-                    self.disconnect(user_id, websocket)
-
-    async def send_heartbeat(self, user_id: str, websocket: WebSocket):
-        try:
-            await websocket.send_json({"status": "heartbeat"})
-        except Exception:
-            self.disconnect(user_id, websocket)
+        # In Socket.IO, we use rooms. Every authenticated user is in a room named after their user_id.
+        await self.sio.emit('status_update', message, room=user_id)
 
 manager = ConnectionManager()
 
+def setup_socket_handlers(sio):
+    manager.set_sio(sio)
+
+    @sio.event
+    async def connect(sid, environ):
+        pass
+
+    @sio.event
+    async def authenticate(sid, data):
+        token = data.get('token')
+        if not token:
+            await sio.emit('error', {'message': 'No token provided'}, room=sid)
+            return
+
+        try:
+            user_id, email = await get_current_user(token)
+            # Add this client to a room specifically for this user
+            await sio.enter_room(sid, user_id)
+            await sio.emit('authenticated', {'user_id': user_id}, room=sid)
+        except Exception as e:
+            await sio.emit('error', {'message': f"Authentication failed: {str(e)}"}, room=sid)
+
+    @sio.event
+    async def disconnect(sid):
+        pass
+
 router = APIRouter()
 
-@router.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: str, token: Optional[str] = None):
-    # Verify token
-    if not token:
-        await websocket.accept() # Must accept before sending close code or messages in some environments
-        await websocket.close(code=4001, reason="No token provided")
-        return
 
-    try:
-        user_id = await get_current_user(token)
-    except Exception as e:
-        await websocket.accept()
-        await websocket.close(code=4002, reason="Invalid token")
-        return
-
-    await manager.connect(user_id, websocket)
-    try:
-        while True:
-            # Send heartbeat every 30 seconds to keep connection alive
-            # We use wait_for to check for client messages (unused) with a timeout
-            try:
-                # We don't expect messages, so we just wait and timeout
-                await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
-            except asyncio.TimeoutError:
-                # Send heartbeat on timeout
-                await manager.send_heartbeat(user_id, websocket)
-            except Exception:
-                # Any other error means connection is likely closed
-                break
-    except WebSocketDisconnect:
-        manager.disconnect(user_id, websocket)
-    finally:
-        manager.disconnect(user_id, websocket)
-
-@router.post("/cancel/{task_id}")
-async def cancel_animation(task_id: str, user_id: str = Depends(get_current_user)):
-    """Cancel a running animation task"""
-    task = get_task_from_db(task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    if task["user_id"] != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to cancel this task")
-    
-    if task["status"] in ["completed", "failed", "cancelled"]:
-        return {"status": "error", "message": f"Task is already {task['status']}"}
-    
-    update_task_in_db(task_id, {"status": "cancelled"})
-    print(f"[CANCEL] Task {task_id} marked as cancelled by user {user_id}")
-    
-    # Broadcast cancellation
-    await manager.broadcast_status(user_id, task_id, "cancelled", task.get("progress", 0))
-    
-    return {"status": "ok", "message": "Cancellation request received"}
 
 class Quality(str, Enum):
     LOW = "l"      # 420p
@@ -178,27 +117,37 @@ def create_task_in_db(task_id: str, user_id: str, prompt: str, quality: str, cha
     }).execute()
 
 @router.get("/chats")
-async def get_chats(user_id: str = Depends(get_current_user)):
+async def get_chats(user_identity: tuple[str, str] = Depends(get_current_user)):
     """Get all chats for the current user"""
+    user_id, _ = user_identity
     return get_user_chats_from_db(user_id)
 
 @router.delete("/chats/{chat_id}")
-async def delete_chat(chat_id: str, user_id: str = Depends(get_current_user)):
+async def delete_chat(chat_id: str, user_identity: tuple[str, str] = Depends(get_current_user)):
     """Delete a chat session"""
+    user_id, _ = user_identity
     return delete_chat_from_db(chat_id, user_id)
 
 @router.get("/chats/{chat_id}/history")
-async def get_chat_history(chat_id: str, user_id: str = Depends(get_current_user)):
+async def get_chat_history(chat_id: str, user_identity: tuple[str, str] = Depends(get_current_user)):
     """Get history (tasks) for a specific chat"""
+    user_id, _ = user_identity
     return get_chat_tasks_from_db(chat_id, user_id)
 
 @router.post("/generate", response_model=AnimationResponse)
 async def generate_animation(
     request: AnimationRequest,
     background_tasks: BackgroundTasks,
-    user_id: str = Depends(get_current_user)
+    user_identity: tuple[str, str] = Depends(get_current_user)
 ):
+    user_id, email = user_identity
     import uuid
+    
+    # CRITICAL: Ensure user exists in DB before creating related records (chats/tasks)
+    success = await ensure_user_exists(user_id, email)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to synchronize user record. Please contact support.")
+    
     task_id = str(uuid.uuid4())
     
     # Determine Chat ID
@@ -231,27 +180,15 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
     import traceback
     from app.services.video_renderer import sanitize_manim_script
     try:
-        if is_task_cancelled(task_id):
-            print(f"[{task_id}] Process stopped: task was cancelled before starting.")
-            return
-
         print(f"[{task_id}] Starting animation generation flow...")
         
         update_task_in_db(task_id, {"status": "generating_script", "progress": 20})
         await manager.broadcast_status(user_id, task_id, "generating_script", 20)
         
-        if is_task_cancelled(task_id):
-            print(f"[{task_id}] Process stopped: task was cancelled.")
-            return
-
         print(f"[{task_id}] Generating Manim script (duration: {duration}s)...")
         script = await generate_manim_script(prompt, duration)
         print(f"[{task_id}] Script generated:\n{script[:200]}...")
         
-        if is_task_cancelled(task_id):
-            logger.info(f"[{task_id}] Process stopped: task was cancelled after script generation.")
-            return
-
         # Sanitize script for Manim CE 0.18 compatibility and persist what will actually render
         script_sanitized = sanitize_manim_script(script)
         update_task_in_db(task_id, {
@@ -261,20 +198,12 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
         })
         await manager.broadcast_status(user_id, task_id, "rendering", 50)
         
-        if is_task_cancelled(task_id):
-            logger.info(f"[{task_id}] Process stopped: task was cancelled before starting render.")
-            return
-
         print(f"[{task_id}] Rendering animation...")
         
         try:
             video_path = await render_animation(script_sanitized, quality)
             print(f"[{task_id}] Video rendered at: {video_path}")
         except RuntimeError as render_error:
-            if is_task_cancelled(task_id):
-                logger.info(f"[{task_id}] Process stopped: task was cancelled during initial rendering attempt.")
-                return
-            
             error_str = str(render_error)
             logger.warning(f"[{task_id}] First attempt failed: {error_str[:200]}")
             
@@ -288,10 +217,6 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
             }
             
             script = await generate_improved_code(error_context)
-            if is_task_cancelled(task_id):
-                logger.info(f"[{task_id}] Process stopped: task was cancelled during self-healing generation.")
-                return
-
             # Sanitize again and persist
             script_sanitized = sanitize_manim_script(script)
             update_task_in_db(task_id, {"generated_script": script_sanitized})
@@ -301,10 +226,6 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
             video_path = await render_animation(script_sanitized, quality)
             print(f"[{task_id}] Retry successful: {video_path}")
         
-        if is_task_cancelled(task_id):
-            logger.info(f"[{task_id}] Process stopped: task was cancelled after rendering completion.")
-            return
-
         update_task_in_db(task_id, {"status": "uploading", "progress": 80})
         await manager.broadcast_status(user_id, task_id, "uploading", 80)
         
@@ -312,10 +233,6 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
         video_url = await upload_video(video_path, user_id, prompt)
         print(f"[{task_id}] Upload complete: {video_url}")
         
-        if is_task_cancelled(task_id):
-            logger.info(f"[{task_id}] Process stopped: task was cancelled after upload.")
-            return
-
         update_task_in_db(task_id, {
             "status": "completed",
             "progress": 100,
@@ -324,10 +241,6 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
         await manager.broadcast_status(user_id, task_id, "completed", 100, video_url=video_url)
         
     except Exception as e:
-        if task_id in cancelled_tasks:
-            print(f"[{task_id}] Task was cancelled, ignoring error: {e}")
-            return
-
         error_msg = f"{str(e)}\n{traceback.format_exc()}"
         print(f"[{task_id}] ERROR: {error_msg}")
         
@@ -355,7 +268,8 @@ async def get_task_status(task_id: str):
     return task
 
 @router.get("/videos")
-async def list_videos(user_id: str = Depends(get_current_user)):
+async def list_videos(user_identity: tuple[str, str] = Depends(get_current_user)):
+    user_id, _ = user_identity
     try:
         return await get_user_videos(user_id)
     except Exception as e:
