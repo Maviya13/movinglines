@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${GeistSans.variable} font-sans bg-background text-foreground antialiased`}>
         <ErrorBoundary>
           <AuthProvider>

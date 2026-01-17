@@ -19,6 +19,7 @@ out/
 dist/
 build/
 *.egg-info/
+.source/
 
 # IDE
 .idea/

@@ -1,0 +1,84 @@
+---
+title: Getting Started
+description: Set up and create your first animation with MovingLines
+icon: Rocket
+---
+
+# Getting Started
+
+This guide will help you set up MovingLines and create your first animation.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+- Node.js 18+ installed
+- Python 3.10+ installed
+- FFmpeg installed (for Manim rendering)
+- Docker (optional, for containerized deployment)
+
+## Installation
+
+### Using Docker (Recommended)
+
+```bash
+git clone https://github.com/piyushdhoka/movinglines.git
+cd movinglines
+cp env.example .env
+# Edit .env with your API keys
+docker-compose up --build
+```
+
+### Manual Setup
+
+#### 1. Clone the Repository
+
+```bash
+git clone https://github.com/piyushdhoka/movinglines.git
+cd movinglines
+```
+
+#### 2. Set Up Backend
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: .\venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env
+python -m scripts.seed_pinecone
+```
+
+#### 3. Set Up Frontend
+
+```bash
+cd frontend
+bun install
+cp .env.example .env.local
+bun run db:migrate
+```
+
+#### 4. Start Development Servers
+
+**Backend:**
+```bash
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+**Frontend:**
+```bash
+bun run dev
+```
+
+## Creating Your First Animation
+
+1. Navigate to `http://localhost:3000`
+2. Sign up or log in
+3. Enter a prompt like: "Create a visualization of the Pythagorean theorem"
+4. Select your quality settings
+5. Click Generate!
+
+## Next Steps
+
+- Learn about [Quality Options](/docs/quality)
+- Explore the [API Reference](/docs/api)
+- Check out [Example Prompts](/docs/examples)
