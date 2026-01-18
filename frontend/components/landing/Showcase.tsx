@@ -43,7 +43,7 @@ export function Showcase() {
           {showcases.map((item) => (
             <div key={item.title} className="dark-card p-1 group">
               <div className="aspect-video bg-black/50 overflow-hidden relative border border-white/5">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-linear-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity">
                   <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <Play className="h-4 w-4 fill-white text-white" />

@@ -42,7 +42,7 @@ export function Footer() {
           {/* Brand Section */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-3 w-fit">
-              <div className="h-9 w-9 rounded-[2px] bg-black overflow-hidden flex items-center justify-center">
+              <div className="h-9 w-9 rounded-xs bg-black overflow-hidden flex items-center justify-center">
                 <Image src="/logo.png" alt="MovingLines" width={36} height={36} className="w-full h-full object-cover" />
               </div>
               <p className="text-base font-medium text-white">movinglines</p>

@@ -79,7 +79,7 @@ export function AuthModal() {
   if (confirmationSent) {
     return (
       <Dialog open={isOpen} onOpenChange={close}>
-        <DialogContent className="sm:max-w-md border border-white/10 bg-black p-0 overflow-hidden rounded-[4px] shadow-2xl">
+        <DialogContent className="sm:max-w-md border border-white/10 bg-black p-0 overflow-hidden rounded-sm shadow-2xl">
           <DialogTitle className="sr-only">Email Confirmation</DialogTitle>
           <DialogDescription className="sr-only">Check your email for confirmation link</DialogDescription>
           <div className="p-8 md:p-10">
@@ -93,7 +93,7 @@ export function AuthModal() {
                   We sent a confirmation link to <br /> <span className="text-white/70">{email}</span>
                 </p>
               </div>
-              <div className="bg-white/5 border border-white/5 rounded-[2px] p-4">
+              <div className="bg-white/5 border border-white/5 rounded-xs p-4">
                 <p className="text-[11px] text-white/30 uppercase tracking-wider">
                   Check your spam folder if it doesn't arrive.
                 </p>
@@ -119,13 +119,13 @@ export function AuthModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={close}>
-      <DialogContent className="sm:max-w-md border border-white/10 bg-[#0a0a0a] p-0 overflow-hidden rounded-[4px] shadow-2xl animate-slide-up">
+      <DialogContent className="sm:max-w-md border border-white/10 bg-[#0a0a0a] p-0 overflow-hidden rounded-sm shadow-2xl animate-slide-up">
         <DialogTitle className="sr-only">{isSignUp ? 'Create account' : 'Welcome back'}</DialogTitle>
         <DialogDescription className="sr-only">{isSignUp ? 'Start creating amazing animations' : 'Continue your creative journey'}</DialogDescription>
         <div className="p-8 md:p-10 space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-[2px] bg-white mx-auto">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xs bg-white mx-auto">
               <Sparkles className="h-6 w-6 text-black" />
             </div>
             <div className="space-y-1">
@@ -143,7 +143,7 @@ export function AuthModal() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
-            className="w-full h-12 bg-white flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-[0.98] text-black font-medium text-[13px] rounded-[2px] disabled:opacity-50"
+            className="w-full h-12 bg-white flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-[0.98] text-black font-medium text-[13px] rounded-xs disabled:opacity-50"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -176,7 +176,7 @@ export function AuthModal() {
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full h-11 pl-11 bg-white/5 border border-white/10 rounded-[2px] text-white text-[13px] placeholder:text-white/20 transition-all focus:outline-none focus:border-white/30"
+                  className="w-full h-11 pl-11 bg-white/5 border border-white/10 rounded-xs text-white text-[13px] placeholder:text-white/20 transition-all focus:outline-none focus:border-white/30"
                   required
                 />
               </div>
@@ -188,7 +188,7 @@ export function AuthModal() {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-11 pl-11 bg-white/5 border border-white/10 rounded-[2px] text-white text-[13px] placeholder:text-white/20 transition-all focus:outline-none focus:border-white/30"
+                  className="w-full h-11 pl-11 bg-white/5 border border-white/10 rounded-xs text-white text-[13px] placeholder:text-white/20 transition-all focus:outline-none focus:border-white/30"
                   required
                   minLength={6}
                 />
@@ -196,7 +196,7 @@ export function AuthModal() {
             </div>
 
             {error && (
-              <div className="text-red-400 text-[11px] font-medium p-3 bg-red-400/5 border border-red-400/10 rounded-[2px]">
+              <div className="text-red-400 text-[11px] font-medium p-3 bg-red-400/5 border border-red-400/10 rounded-xs">
                 {error}
               </div>
             )}

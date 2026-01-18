@@ -31,7 +31,7 @@ const features = [
 export function Features() {
   return (
     <section id="features" className="w-full px-6 py-24 md:py-32 bg-black relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
 
       <div className="max-w-7xl mx-auto space-y-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -50,10 +50,10 @@ export function Features() {
           </Link>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/5 border border-white/5 rounded-[4px] overflow-hidden">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5 border border-white/5 rounded-sm overflow-hidden">
           {features.map((feature) => (
-            <div key={feature.title} className="bg-black p-8 md:p-10 space-y-6 transition-colors hover:bg-white/[0.02]">
-              <div className="h-10 w-10 rounded-[2px] bg-white/5 border border-white/10 flex items-center justify-center">
+            <div key={feature.title} className="bg-black p-8 md:p-10 space-y-6 transition-colors hover:bg-white/2">
+              <div className="h-10 w-10 rounded-xs bg-white/5 border border-white/10 flex items-center justify-center">
                 <feature.icon className="h-5 w-5 text-white/70" />
               </div>
               <div className="space-y-3">

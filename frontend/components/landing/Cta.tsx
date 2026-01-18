@@ -7,7 +7,7 @@ export function Cta({ onLaunchAction }: { onLaunchAction: () => void }) {
   return (
     <section className="w-full px-6 py-24 md:py-32 bg-black">
       <div className="max-w-5xl mx-auto dark-card p-10 md:p-16 text-center space-y-8 relative overflow-hidden group">
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
 
         <div className="space-y-4 relative z-10">
           <p className="text-[11px] font-medium tracking-[0.2em] text-blue-400 uppercase">Ready to Start?</p>

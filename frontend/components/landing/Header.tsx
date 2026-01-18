@@ -36,10 +36,10 @@ export function Header({ onLaunchAction }: { onLaunchAction: () => void }) {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex justify-center p-4 md:p-6 pointer-events-none">
-      <div className="w-full max-w-7xl flex items-center justify-between px-4 py-2 border border-white/5 bg-black/40 backdrop-blur-xl rounded-[4px] pointer-events-auto transition-all duration-300 hover:border-white/10">
+      <div className="w-full max-w-7xl flex items-center justify-between px-4 py-2 border border-white/5 bg-black/40 backdrop-blur-xl rounded-sm pointer-events-auto transition-all duration-300 hover:border-white/10">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="h-8 w-8 rounded-[2px] bg-black overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105">
+            <div className="h-8 w-8 rounded-xs bg-black overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105">
               <Image src="/logo.png" alt="MovingLines" width={32} height={32} className="w-full h-full object-cover" />
             </div>
             <p className="text-base font-medium tracking-tight text-white">movinglines</p>
@@ -50,7 +50,7 @@ export function Header({ onLaunchAction }: { onLaunchAction: () => void }) {
               <Link
                 key={item.label}
                 href={item.href}
-                className="text-sm text-white/60 hover:text-white px-4 py-2 rounded-[2px] transition-colors"
+                className="text-sm text-white/60 hover:text-white px-4 py-2 rounded-xs transition-colors"
               >
                 {item.label}
               </Link>
@@ -86,7 +86,7 @@ export function Header({ onLaunchAction }: { onLaunchAction: () => void }) {
                     className="rounded-full"
                   />
                 ) : (
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-medium">
+                  <div className="w-6 h-6 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-medium">
                     {userName.charAt(0).toUpperCase()}
                   </div>
                 )}
