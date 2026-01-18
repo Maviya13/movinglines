@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${GeistSans.variable} font-sans bg-background text-foreground antialiased`}>
+      <body className={`${GeistSans.variable} font-sans bg-background text-foreground antialiased`} suppressHydrationWarning>
         <ErrorBoundary>
           <AuthProvider>
             <AuthModalProvider>

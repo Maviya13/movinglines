@@ -38,7 +38,7 @@ export function Hero({ onLaunchAction }: { onLaunchAction: () => void }) {
         </button>
 
         {/* Main Heading */}
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tight bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent pb-12 pt-4 leading-[1.4]">
           The Vibe Coding Studio
         </h1>
 
