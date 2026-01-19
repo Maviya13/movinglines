@@ -73,9 +73,9 @@ def _strip_markdown_fences(code: str) -> str:
     return code.strip()
 
 
-async def generate_manim_script(user_prompt: str, duration: int = 15) -> str:
+async def generate_manim_script(user_prompt: str, duration: int = 15, force_image: bool = False) -> str:
     """Generate Manim script from user prompt using RAG."""
-    logger.info(f"[LLM] Generating script for: {user_prompt[:100]}...")
+    logger.info(f"[LLM] Generating script for: {user_prompt[:100]}... (force_image={force_image})")
     
     # Step 1: Retrieve relevant examples from Pinecone
     logger.info("[LLM] Querying Pinecone for relevant examples...")
@@ -102,6 +102,9 @@ async def generate_manim_script(user_prompt: str, duration: int = 15) -> str:
     
     user_prompt_formatted = MANIM_USER_PROMPT.replace("{user_prompt}", user_prompt).replace("{min_duration}", str(min_dur)).replace("{max_duration}", str(max_dur))
     
+    if force_image:
+        user_prompt_formatted += "\n\nCRITICAL REQUIREMENT: You MUST include at least one `ImageMobject` using the `{{IMAGE:vivid description}}` syntax in this animation. Do not forget!"
+    
     # Step 3: Create messages directly (avoid ChatPromptTemplate parsing braces)
     messages = [
         SystemMessage(content=system_prompt_with_context),
@@ -127,7 +130,21 @@ async def generate_manim_script(user_prompt: str, duration: int = 15) -> str:
     # Sanitize 3D camera controls (ThreeDScene doesn't have camera.frame)
     code = _sanitize_3d_camera(code)
 
-    logger.info(f"[LLM] Generated {len(code)} characters of code")
+    # PRE-RENDER SYNTAX VALIDATION
+    try:
+        compile(code, "<string>", "exec")
+        logger.info(f"[LLM] Generated {len(code)} characters of valid code")
+    except SyntaxError as e:
+        logger.warning(f"[LLM] Initial generation produced invalid syntax: {e}. Triggering early self-healing...")
+        error_context = {
+            'prompt': user_prompt,
+            'code': code,
+            'error': f"Syntax Error during pre-validation: {str(e)}",
+            'use_image': force_image
+        }
+        # Attempt one internal fix
+        code = await generate_improved_code(error_context)
+        logger.info(f"[LLM] Healed code generated ({len(code)} chars)")
 
     return code
 
@@ -286,17 +303,21 @@ async def generate_improved_code(error_context: dict) -> str:
     prompt = error_context.get('prompt', '')
     previous_code = error_context.get('code', '')
     error_message = error_context.get('error', '')
+    use_image = error_context.get('use_image', False)
     
-    logger.info("[LLM] Generating improved code from error context...")
-    print("[LLM] Attempting self-healing code generation...")
+    logger.info(f"[LLM] Generating improved code (use_image={use_image})...")
+    print(f"[LLM] Attempting self-healing for: {error_message[:100]}...")
     
     examples = await get_relevant_examples(prompt, top_k=5)
     context = format_examples_for_context(examples)
     
-    print(f"[LLM] Using {len(examples)} examples for retry")
-    
-    system_template = f"""You are a Manim debugging expert. Fix the broken code.
+    # Inject image instruction if needed
+    image_instruction = ""
+    if use_image:
+        image_instruction = "\n7. CRITICAL: You MUST include at least one `ImageMobject` using the `{{IMAGE:vivid description}}` syntax."
 
+    system_template = f"""You are a Manim debugging expert. Fix the broken code.
+    
 Original request: {prompt}
 
 Previous code that failed:
@@ -313,7 +334,9 @@ Rules:
 3. Inherit from Scene or ThreeDScene
 4. ThreeDScene: use move_camera(), NOT self.camera.frame
 5. Fix the specific error mentioned
-6. Return ONLY code, no explanations
+6. Return ONLY code, no explanations or comments{image_instruction}
+7. DO NOT include any comments inside the Python code (# comments).
+8. Formatting and syntax must be perfect.
 
 Relevant examples:
 {context}

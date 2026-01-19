@@ -56,6 +56,7 @@ export default function DashboardPage() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [generatedCode, setGeneratedCode] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [useImage, setUseImage] = useState(false);
 
   // Credit State
   const [credits, setCredits] = useState<number | null>(null);
@@ -302,7 +303,7 @@ export default function DashboardPage() {
     setVideoUrl(null);
 
     try {
-      const data = await generateAnimation(prompt, quality, duration, session.access_token, activeChatId || undefined);
+      const data = await generateAnimation(prompt, quality, duration, session.access_token, activeChatId || undefined, useImage);
       setTaskId(data.task_id);
       taskIdRef.current = data.task_id; // Sync ref immediately
 
@@ -403,6 +404,8 @@ export default function DashboardPage() {
             generatedCode={generatedCode}
             handleGenerate={handleGenerate}
             credits={credits}
+            useImage={useImage}
+            setUseImage={setUseImage}
           />
         ) : currentView === 'history' ? (
           <HistoryView />

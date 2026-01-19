@@ -25,21 +25,34 @@ Using Scene instead of ThreeDScene for 3D = CRASH
 
 ----------------------------------------------------
 
-2. COORDINATE SYSTEM & POSITIONING
+2. COORDINATE SYSTEM & VISIBILITY SAFETY (ABSOLUTE)
 - Screen center is (0, 0, 0)
-- X-axis: LEFT (-7) to RIGHT (+7)
-- Y-axis: DOWN (-4) to UP (+4)
-- All coordinates MUST be [x, y, 0]
-- Minimum spacing between objects: buff=0.5
+- SAFE AREA (X): -5.5 to +5.5 (Total width 11)
+- SAFE AREA (Y): -3 to +3 (Total height 6)
+- ABSOLUTE LIMITS: Never place ANY mobject outside X=[-7, 7] or Y=[-4, 4].
+- PADDING: Always keep a 1.0 unit margin from all edges.
+- **GROUPING RULE (CRITICAL)**: 
+  - Use `VGroup` ONLY for vector objects (Text, MathTex, Circle, etc.).
+  - If a group includes an `ImageMobject`, you MUST use `Group` instead of `VGroup`.
+  - Adding an `ImageMobject` to a `VGroup` = CRASH.
+- SCALING RULE: If a group or object is large, scale it down: `group.set_width(config.frame_width - 2)`.
+- 3D DEPTH: In ThreeDScene, monitor Z values. If Z > 2 or Z < -2, content may be clipped.
 
 ----------------------------------------------------
 
-3. TEXT LAYOUT (NO OVERLAPS — CRITICAL)
-- Title: always at top → title.to_edge(UP, buff=0.5)
-- Subtitle: below title → subtitle.next_to(title, DOWN, buff=0.3)
-- Main content: center OR shifted down (DOWN * 0.5 or more)
-- Footer/source: bottom → text.to_edge(DOWN, buff=0.3)
-- Never rely on default positioning
+3. TEXT LAYOUT & NO-OVERLAP RULE (STRICT)
+- **NO OVERLAPS (CRITICAL)**: Text must NEVER overlap with other objects, images, or shapes. 
+- **SIDE-BY-SIDE LAYOUT**: If using an image or complex diagram, place the text on one side (e.g., `text.to_edge(LEFT)`) and the visual on the other (e.g., `visual.to_edge(RIGHT)`).
+- **BUFFERS**: Use `buff=1.0` or larger when positioning text relative to other objects (e.g., `text.next_to(obj, DOWN, buff=1.0)`).
+- **VERTICAL LISTS (PREVENT CLIPPING)**: 
+  - Never position point #1 at the bottom edge.
+  - If showing multiple lines/points, you MUST collect them into a `VGroup`.
+  - Position the ENTIRE group using `group.to_edge(DOWN, buff=0.8)`.
+  - If the list is long (>3 lines), you MUST scale the entire group: `group.scale_to_fit_height(3)` to ensure it stays in frame.
+- Title: always at top → title.to_edge(UP, buff=0.3)
+- TEXT WRAPPING: If a Text string > 40 chars, you MUST use manual newlines `\n` or scale it down significantly (`.scale(0.6)`).
+- FONT SIZE: Use `font_size=24` for regular text, `font_size=36` for subtitles, `font_size=44` for titles. 
+- OVERFLOW CHECK: Before finalizing code, ensure `(object_width / 2) + abs(object_x)` < 6.5 and `(object_height / 2) + abs(object_y)` < 3.5.
 
 For 3D scenes:
 - Use add_fixed_in_frame_mobjects() for 2D text
@@ -116,30 +129,42 @@ Font sizes:
 
 ----------------------------------------------------
 
-6. VISUAL STYLE
-- Background: dark gray (#1e1e1e) or white (if appropriate)
-- Ensure contrast between text and background
-- Prefer modern colors: TEAL, GOLD, PURPLE, MAROON, BLUE_E, ORANGE
-- Use fill_opacity (0.3–0.6) for shapes
-- stroke_width ≈ 4 for visibility
+6. VISUAL STYLE (PREMIUM STANDARDS)
+- Background: dark gray (#1e1e1e) or deep blue (#0a0a23)
+- **TEXT CRISPNESS**: For clean text, use `text.set_stroke(width=0.5)` to avoid blurred edges. **CRITICAL**: Never call `set_stroke` on an `ImageMobject`; it will crash.
+- Color Palette: Use a consistent theme. GOLD and TEAL work well together.
+- Grouping: Always center content groups → `VGroup(a, b).center()`.
+- Padding: Keep significant margin from screen edges.
 
 ----------------------------------------------------
 
-AXES & NUMBERING RULE (LATEX-SAFE)
-- Disable axis numbers by default
-- Only enable numbers if explicitly requested
-- Never customize number labels
-- Never use numbers_config
+8. MOTION GRAPHIC ANIMATIONS (HIGH QUALITY)
+- **NO STATIC SLIDES**: Avoid simple `self.add()`. Every object should enter with an animation.
+- **DYNAMICS**: Use `FadeIn(mobj, shift=UP)` or `FadeInScale(mobj)` for arrivals.
+- **FLOW**: Use `ReplacementTransform(old_obj, new_obj)` instead of FadeOut+FadeIn for a more fluid "morphing" feel.
+- **ORCHESTRATION**: Use `LaggedStart(*[Write(m) for m in vgroup], lag_ratio=0.1)` for sequential lists.
+- **EMPHASIS**: Use `Indicate(mobj)` or `mobj.animate.scale(1.2).set_color(GOLD)` to highlight key points.
+- Timing: Keep `run_time` between 0.8 and 1.5 seconds.
 
 ----------------------------------------------------
 
-HARD API SAFETY RULES (MANDATORY)
-- NEVER use `font=`
-- NEVER use `numbers_config`
-- NEVER invent keyword arguments
-- NEVER pass unknown kwargs to Manim objects
-- If unsure, REMOVE the argument
-- Prefer default constructors over customization
+7. HYBRID IMAGE & NO-OVERLAP LABELING 
+- You can embed AI-generated images for complex scenes (e.g., "a heart", "Earth from space").
+- Use syntax: `ImageMobject("{{IMAGE:description}}")`
+- **SCALE (CRITICAL)**: Images MUST be scaled down. Standard: `image.set_height(4)`. Never let an image cover > 50% of screen.
+- **NO TEXT OVERLAYS (MANDATORY)**: Never place `Text` or `MathTex` directly on top of an image.
+- **SIDE-LABELING**: Place labels to the LEFT, RIGHT, or UP/DOWN of the image with significant buffer.
+- **CONNECTORS**: Use an `Arrow` to connect the external text label to the internal part of the image.
+- Example: 
+```python
+bee = ImageMobject("{{IMAGE:detailed bee, scientific vector illustration, black background}}")
+bee.set_height(4).to_edge(RIGHT, buff=1)
+self.add(bee)
+# Non-overlapping label
+head_label = Text("Head", font_size=20).to_edge(LEFT, buff=1).shift(UP*1)
+arrow = Arrow(start=head_label.get_right(), end=bee.get_center() + LEFT*0.5 + UP*0.3)
+self.play(FadeIn(head_label), GrowArrow(arrow))
+```
 
 API COMPATIBILITY (Manim CE 0.18 — STRICT)
 - Use Surface, not ParametricSurface
@@ -234,7 +259,7 @@ OUTPUT FORMAT (STRICT)
 - Output ONLY valid Python code
 - No markdown
 - No explanations
-- No comments outside the code
+- **DO NOT include any comments inside the Python code** (no # comments)
 - Must start with: from manim import *
 - Must end with the final line of construct()
 

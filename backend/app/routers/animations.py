@@ -83,6 +83,7 @@ class AnimationRequest(BaseModel):
     quality: Quality = Quality.MEDIUM
     duration: int = 15
     chat_id: Optional[str] = None
+    use_image: bool = False
 
 class AnimationResponse(BaseModel):
     task_id: str
@@ -179,7 +180,8 @@ async def generate_animation(
         request.prompt,
         request.quality.value,
         request.duration,
-        user_id
+        user_id,
+        request.use_image
     )
     
     return AnimationResponse(
@@ -189,7 +191,38 @@ async def generate_animation(
         message="Animation generation started"
     )
 
-async def process_animation(task_id: str, prompt: str, quality: str, duration: int, user_id: str):
+async def _apply_hybrid_images(task_id: str, script: str) -> str:
+    """Helper to find placeholders and generate them in parallel."""
+    import re
+    import asyncio
+    from app.services.image_generator import generate_image, get_fallback_image
+    
+    # Use set to avoid redundant requests for identical prompts
+    image_prompts = list(set(re.findall(r"{{IMAGE:(.*?)}}", script)))
+    
+    if image_prompts:
+        print(f"[{task_id}] Generating {len(image_prompts)} unique images in parallel...")
+        
+        # Launch all tasks
+        tasks = [generate_image(p) for p in image_prompts]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        for img_prompt, result in zip(image_prompts, results):
+            if isinstance(result, Exception):
+                logger.warning(f"[{task_id}] Failed to generate image for '{img_prompt}': {result}")
+                img_path = get_fallback_image()
+            else:
+                img_path = result
+            
+            img_path_escaped = img_path.replace("\\", "/")
+            # Use regex to replace ALL occurrences of this specific placeholder
+            # Escaping the prompt for regex safety
+            placeholder = f"{{{{IMAGE:{re.escape(img_prompt)}}}}}"
+            script = re.sub(placeholder, img_path_escaped, script)
+            
+    return script
+
+async def process_animation(task_id: str, prompt: str, quality: str, duration: int, user_id: str, use_image: bool = False):
     import traceback
     from app.services.video_renderer import sanitize_manim_script
     try:
@@ -198,10 +231,13 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
         update_task_in_db(task_id, {"status": "generating_script", "progress": 20})
         await manager.broadcast_status(user_id, task_id, "generating_script", 20)
         
-        print(f"[{task_id}] Generating Manim script (duration: {duration}s)...")
-        script = await generate_manim_script(prompt, duration)
+        print(f"[{task_id}] Generating Manim script (duration: {duration}s, use_image: {use_image})...")
+        script = await generate_manim_script(prompt, duration, force_image=use_image)
         print(f"[{task_id}] Script generated:\n{script[:200]}...")
         
+        # --- HYBRID IMAGE INTEGRATION ---
+        script = await _apply_hybrid_images(task_id, script)
+
         # Sanitize script for Manim CE 0.18 compatibility and persist what will actually render
         script_sanitized = sanitize_manim_script(script)
         update_task_in_db(task_id, {
@@ -226,10 +262,13 @@ async def process_animation(task_id: str, prompt: str, quality: str, duration: i
             error_context = {
                 'prompt': prompt,
                 'code': script,
-                'error': error_str
+                'error': error_str,
+                'use_image': use_image
             }
             
             script = await generate_improved_code(error_context)
+            # Re-apply hybrid images for the new script
+            script = await _apply_hybrid_images(task_id, script)
             # Sanitize again and persist
             script_sanitized = sanitize_manim_script(script)
             update_task_in_db(task_id, {"generated_script": script_sanitized})

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowUp, Plus, ChevronDown } from 'lucide-react'
+import { ArrowUp, Plus, ChevronDown, Image as ImageIcon } from 'lucide-react'
 import { Quality } from '@/lib/api'
 import { Viewport } from './Viewport'
 import {
@@ -28,6 +28,8 @@ interface WorkspaceViewProps {
   generatedCode: string
   handleGenerate: () => void
   credits: number | null
+  useImage: boolean
+  setUseImage: (val: boolean) => void
 }
 
 export function WorkspaceView({
@@ -46,6 +48,8 @@ export function WorkspaceView({
   generatedCode,
   handleGenerate,
   credits,
+  useImage,
+  setUseImage,
 }: WorkspaceViewProps) {
   const [mobileTab, setMobileTab] = useState<'chat' | 'output'>('chat')
 
@@ -220,6 +224,23 @@ export function WorkspaceView({
                     </div>
                   )}
                 </div>
+
+                <div className="h-4 w-px bg-white/10 mx-1" />
+
+                {/* Image Toggle */}
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setUseImage(!useImage); }}
+                  disabled={isGenerating}
+                  title={useImage ? "Forcing AI Image Generation (Imagen 4)" : "AI Image Generation (Auto)"}
+                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${useImage
+                    ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+                    : 'text-white/40 hover:text-white/60 border border-transparent hover:bg-white/5'
+                    }`}
+                >
+                  <ImageIcon className={`h-3 w-3 ${useImage ? 'animate-pulse' : ''}`} />
+                  <span>AI Image</span>
+                </button>
               </div>
               {/* Right side - Credits & Send */}
               <div className="flex items-center gap-3">

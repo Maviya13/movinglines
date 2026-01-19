@@ -1,10 +1,16 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useState, useEffect } from 'react'
 import { getVideos } from '@/lib/api'
 import { useAuth } from '@/components/providers/AuthProvider'
 import type { Video as DbVideo } from '@/lib/db/schema'
+import 'plyr/dist/plyr.css'
 import { Play, Download, Calendar } from 'lucide-react'
+
+const Plyr = dynamic(() => import('plyr-react').then((mod) => mod.Plyr), {
+  ssr: false,
+})
 
 export function VideoGallery() {
   const { session } = useAuth()
@@ -103,12 +109,31 @@ export function VideoGallery() {
             className="w-full max-w-4xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <video
-              src={selectedVideo.videoUrl}
-              controls
-              autoPlay
-              className="w-full rounded-2xl"
-            />
+            <div key={selectedVideo.videoUrl} className="w-full">
+              <Plyr
+                source={{
+                  type: 'video',
+                  sources: [
+                    {
+                      src: selectedVideo.videoUrl,
+                      type: 'video/mp4',
+                    },
+                  ],
+                }}
+                options={{
+                  autoplay: true,
+                  controls: [
+                    'play-large',
+                    'play',
+                    'progress',
+                    'current-time',
+                    'mute',
+                    'volume',
+                    'fullscreen',
+                  ],
+                }}
+              />
+            </div>
             <div className="mt-4 flex items-center justify-between">
               <p className="text-dark-300">{selectedVideo.prompt}</p>
               <button
@@ -137,8 +162,9 @@ export function VideoGallery() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div >
+      )
+      }
     </>
   )
 }

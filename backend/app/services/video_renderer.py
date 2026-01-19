@@ -176,6 +176,15 @@ def sanitize_manim_script(script: str) -> str:
             lines.insert(0, "import numpy as np")
         s = "\n".join(lines)
 
+    # Hallucination fix: map common hallucinated methods to valid CE equivalents
+    s = s.replace(".height_to(", ".set_height(")
+    s = s.replace(".set_height_to(", ".set_height(")
+    s = s.replace(".set_width_to(", ".set_width(")
+    s = s.replace(".width_to(", ".set_width(")
+    s = s.replace(".move_to_point(", ".move_to(")
+    s = s.replace(".scale_to(", ".scale(")
+    s = s.replace(".set_stroke_width(", ".set_stroke(width=") # Common mixup
+
     # Replace old/unknown API names
     # ParametricSurface is Surface in 0.18
     s = re.sub(r"\bParametricSurface\b", "Surface", s)
@@ -193,6 +202,32 @@ def sanitize_manim_script(script: str) -> str:
 
     s = re.sub(r"(^[ \t]*)self\.play\(\s*self\.move_camera\((.*?)\)\s*\)\s*",
                _fix_move_camera, s, flags=re.MULTILINE | re.DOTALL)
+
+    # Remove .set_stroke(...) from ImageMobject instances (unsupported)
+    # Be conservative: only match if the variable was explicitly assigned as ImageMobject
+    image_vars = re.findall(r"(\w+)\s*=\s*ImageMobject\(", s)
+    for var in image_vars:
+        # Match var.set_stroke(...) and remove it
+        s = re.sub(rf"\b{var}\.set_stroke\(.*?\)", "", s)
+    
+    # Simple direct removal for any immediate calls
+    s = re.sub(r"(ImageMobject\(.*?\))\.set_stroke\(.*?\)", r"\1", s)
+
+    # LOOPHOLE FIX: All submobjects in VGroup must be VMobjects.
+    # ImageMobject is NOT a VMobject. If we find an ImageMobject inside a VGroup, 
+    # we must change VGroup to Group.
+    if image_vars:
+        def _fix_groups(m):
+            indent = m.group(1)
+            content = m.group(2)
+            # Only change if an image variable is actually in the content
+            for var in image_vars:
+                if re.search(rf"\b{var}\b", content):
+                    return f"{indent}Group({content})"
+            return m.group(0)
+        
+        # Only match VGroup calls preceded by whitespace (code, not comments or signatures)
+        s = re.sub(r"(^[ \t]+)VGroup\((.*?)\)", _fix_groups, s, flags=re.MULTILINE | re.DOTALL)
 
     # Normalize Cube calls that incorrectly pass x_length/y_length/z_length.
     s = _normalize_cube_dimensions(s)

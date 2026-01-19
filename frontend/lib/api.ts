@@ -35,14 +35,14 @@ async function handleResponse(res: Response) {
   }
   return res.json()
 }
-export async function generateAnimation(prompt: string, quality: Quality, duration: number, token: string, chatId?: string) {
+export async function generateAnimation(prompt: string, quality: Quality, duration: number, token: string, chatId?: string, useImage: boolean = false) {
   return fetchWithRetry(`${API_URL}/api/animations/generate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
-    body: JSON.stringify({ prompt, quality, duration, chat_id: chatId })
+    body: JSON.stringify({ prompt, quality, duration, chat_id: chatId, use_image: useImage })
   })
 }
 

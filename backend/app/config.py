@@ -4,6 +4,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     google_api_key: str
+    imagen_api_key: str | None = None
     pinecone_api_key: str
     pinecone_index: str = "manim-examples"
     supabase_url: str

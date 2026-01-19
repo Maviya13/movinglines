@@ -240,3 +240,28 @@ h6 {
   scrollbar-width: thin;
   scrollbar-color: #333 #0a0a0a;
 }
+
+/* Plyr Theme Overrides */
+:root {
+  --plyr-color-main: #3b82f6;
+  --plyr-video-background: #000000;
+  --plyr-menu-background: #111111;
+  --plyr-menu-color: #ffffff;
+  --plyr-tooltip-background: #1a1a1a;
+  --plyr-tooltip-color: #ffffff;
+  --plyr-range-thumb-height: 12px;
+  --plyr-range-track-height: 4px;
+}
+
+.plyr--video {
+  border-radius: inherit;
+}
+
+.plyr__control--overlaid {
+  background: rgba(59, 130, 246, 0.8) !important;
+}
+
+.plyr__control:hover {
+  background: var(--plyr-color-main) !important;
+  color: #fff !important;
+}
