@@ -227,26 +227,31 @@ export function WorkspaceView({
 
                 <div className="h-4 w-px bg-white/10 mx-1" />
 
-                {/* Image Toggle */}
+                {/* AI Image Toggle (Beta) - Inline Version */}
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setUseImage(!useImage); }}
                   disabled={isGenerating}
-                  title={useImage ? "Forcing AI Image Generation (Imagen 4)" : "AI Image Generation (Auto)"}
-                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${useImage
-                    ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
-                    : 'text-white/40 hover:text-white/60 border border-transparent hover:bg-white/5'
+                  title={useImage ? "AI Images: ON (Imagen 3)" : "AI Images: OFF (Auto Mode)"}
+                  className={`group relative flex items-center gap-2 px-2 py-1 rounded-md border transition-all duration-300 ${useImage
+                      ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                      : 'bg-white/5 border-white/5 text-white/40 hover:border-white/10 hover:bg-white/10'
                     }`}
                 >
-                  <ImageIcon className={`h-3 w-3 ${useImage ? 'animate-pulse' : ''}`} />
-                  <span>AI Image</span>
+                  <div className="flex items-center gap-1.5">
+                    <ImageIcon className={`h-3 w-3 transition-transform duration-300 ${useImage ? 'scale-110' : 'scale-100 opacity-60'}`} />
+                    <span className="text-[10px] font-bold tracking-tight uppercase">AI Image</span>
+                    <span className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] tracking-widest leading-none ${useImage ? 'bg-blue-500 text-white' : 'bg-white/10 text-white/40'}`}>BETA</span>
+                  </div>
+
+                  {/* Smaller Inline Switch */}
+                  <div className={`relative w-5 h-2.5 rounded-full ml-1 transition-colors duration-300 ${useImage ? 'bg-blue-500' : 'bg-white/10'}`}>
+                    <div className={`absolute top-0.5 left-0.5 w-1.5 h-1.5 rounded-full bg-white transition-all duration-300 ${useImage ? 'translate-x-2.5 shadow-[0_0_4px_white]' : 'translate-x-0'}`} />
+                  </div>
                 </button>
               </div>
-              {/* Right side - Credits & Send */}
+              {/* Right side - Send button only (Credits removed as requested) */}
               <div className="flex items-center gap-3">
-                <InputGroupText>
-                  {credits !== null ? `${credits}/2 credits` : ''}
-                </InputGroupText>
                 <InputGroupButton
                   variant="default"
                   size="icon-sm"

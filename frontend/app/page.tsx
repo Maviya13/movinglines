@@ -7,6 +7,7 @@ import { useAuthModal } from '@/hooks/use-auth-modal'
 import { AuthModal } from '@/components/AuthModal'
 import { Header } from '@/components/landing/Header'
 import { Hero } from '@/components/landing/Hero'
+import { HeroVideoSection } from '@/components/landing/HeroVideoSection'
 import { Features } from '@/components/landing/Features'
 import { Showcase } from '@/components/landing/Showcase'
 import { Cta } from '@/components/landing/Cta'
@@ -33,6 +34,7 @@ export default function LandingPage() {
 
       <main className="relative">
         <Hero onLaunchAction={onLaunch} />
+        <HeroVideoSection />
         <Features />
         <Showcase />
         <Cta onLaunchAction={onLaunch} />

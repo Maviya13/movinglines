@@ -5,6 +5,8 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
+@custom-variant dark (&:is(.dark *));
+
 /* Dark mode (default for main app) */
 :root {
   --background: #0a0a0a;
@@ -26,7 +28,7 @@
   --popover-foreground: #fafafa;
   --input: rgba(255, 255, 255, 0.1);
   --ring: rgba(255, 255, 255, 0.2);
-  --radius: 2px;
+  --radius: 0.5rem;
   --sidebar-background: 240 5.9% 10%;
   --sidebar-foreground: 240 4.8% 95.9%;
   --sidebar-primary: 224.3 76.3% 48%;
