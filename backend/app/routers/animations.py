@@ -128,7 +128,7 @@ async def get_chats(user_identity: tuple[str, str] = Depends(get_current_user)):
 async def delete_chat(chat_id: str, user_identity: tuple[str, str] = Depends(get_current_user)):
     """Delete a chat session"""
     user_id, _ = user_identity
-    return delete_chat_from_db(chat_id, user_id)
+    return await delete_chat_from_db(chat_id, user_id)
 
 @router.get("/chats/{chat_id}/history")
 async def get_chat_history(chat_id: str, user_identity: tuple[str, str] = Depends(get_current_user)):
@@ -166,7 +166,16 @@ async def generate_animation(
     
     # Determine Chat ID
     chat_id = request.chat_id
-    if not chat_id:
+    if chat_id:
+        # One-video-per-chat constraint: Check if this chat already has any tasks/videos
+        # This keeps the experience focused on one concept per chat.
+        existing_tasks = get_chat_tasks_from_db(chat_id, user_id)
+        if existing_tasks:
+            raise HTTPException(
+                status_code=400, 
+                detail="This chat already has an animation. Please start a new chat for a different prompt to keep your history clean."
+            )
+    else:
         # Create new chat with title from prompt (truncated)
         title = request.prompt[:50] + "..." if len(request.prompt) > 50 else request.prompt
         chat_id = create_chat_in_db(user_id, title)

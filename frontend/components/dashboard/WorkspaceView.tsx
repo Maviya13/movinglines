@@ -234,8 +234,8 @@ export function WorkspaceView({
                   disabled={isGenerating}
                   title={useImage ? "AI Images: ON (Imagen 3)" : "AI Images: OFF (Auto Mode)"}
                   className={`group relative flex items-center gap-2 px-2 py-1 rounded-md border transition-all duration-300 ${useImage
-                      ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
-                      : 'bg-white/5 border-white/5 text-white/40 hover:border-white/10 hover:bg-white/10'
+                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                    : 'bg-white/5 border-white/5 text-white/40 hover:border-white/10 hover:bg-white/10'
                     }`}
                 >
                   <div className="flex items-center gap-1.5">

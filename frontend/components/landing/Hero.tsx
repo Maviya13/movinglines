@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { ArrowRight, ChevronDown, Paperclip, Plus, Settings2 } from 'lucide-react'
 
 const categories = [
@@ -31,8 +30,11 @@ export function Hero({ onLaunchAction }: { onLaunchAction: () => void }) {
 
       <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center text-center space-y-8 animate-fade-in">
 
-        {/* Download Button */}
-        <button className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/10 bg-black/50 text-white/90 text-sm font-medium hover:border-white/20 transition-colors">
+        {/* Simple Launch Button */}
+        <button
+          onClick={onLaunchAction}
+          className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/10 bg-black/50 text-white/90 text-sm font-medium hover:border-white/20 transition-colors"
+        >
           Launch MovingLines
           <ChevronDown className="h-4 w-4 text-white/50" />
         </button>

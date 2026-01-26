@@ -2,9 +2,10 @@
 
 import dynamic from 'next/dynamic'
 import { useState, useMemo } from 'react'
-import { Box, Download, Code2, Play, Loader2 } from 'lucide-react'
+import { Box, Download, Code2, Play, Loader2, Share } from 'lucide-react'
 import 'plyr/dist/plyr.css'
 import CodeViewer from './CodeViewer'
+import AITextLoading from '../ui/AITextLoading'
 
 const Plyr = dynamic(() => import('plyr-react').then((mod) => mod.Plyr), {
   ssr: false,
@@ -19,9 +20,6 @@ interface ViewportProps {
   progress?: number
 }
 
-// Loading states for animation generation
-
-
 export function Viewport({
   videoUrl,
   generatedCode,
@@ -31,8 +29,6 @@ export function Viewport({
   progress = 0,
 }: ViewportProps) {
   const [activeTab, setActiveTab] = useState<'viewport' | 'source'>('viewport')
-
-
 
   const handleDownload = async (url: string) => {
     try {
@@ -79,38 +75,36 @@ export function Viewport({
           </button>
         </div>
 
-        {videoUrl && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => handleDownload(videoUrl)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-dark-300 hover:bg-white/10 hover:text-white transition-all text-xs font-medium"
-            title="Download animation"
+            onClick={() => { }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-white/40 hover:bg-white/10 hover:text-white transition-all text-xs font-medium"
+            title="Share animation"
           >
-            <Download className="h-3.5 w-3.5" />
-            Download
+            <Share className="h-3.5 w-3.5" />
+            Share
           </button>
-        )}
+          {videoUrl && (
+            <button
+              onClick={() => handleDownload(videoUrl)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-dark-300 hover:bg-white/10 hover:text-white transition-all text-xs font-medium"
+              title="Download animation"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Download
+            </button>
+          )}
+        </div>
       </div>
-
-
 
       {activeTab === 'viewport' ? (
         <div className="flex-1 flex items-center justify-center p-6 lg:p-8 bg-[#111] overflow-hidden min-h-[400px]">
           {isGenerating ? (
             <div className="w-full max-w-4xl aspect-video rounded-xl border border-white/10 bg-white/5 flex flex-col items-center justify-center gap-6">
-              <div className="relative">
-                <div className="w-20 h-20 rounded-full border-2 border-white/5 flex items-center justify-center">
-                  <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
-                </div>
-                <div className="absolute inset-0 rounded-full border-t-2 border-blue-500 animate-[spin_2s_linear_infinite]" />
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-sm font-medium text-white/70 animate-pulse uppercase tracking-widest">
-                  {status.replace(/_/g, ' ') || 'Processing'}
-                </span>
-                <span className="text-[10px] text-white/30 tabular-nums">
-                  {Math.round(progress)}% Complete
-                </span>
-              </div>
+              <AITextLoading
+                className="text-2xl md:text-3xl"
+                status={status}
+              />
             </div>
           ) : videoUrl ? (
             <div key={videoUrl} className="w-full max-w-4xl aspect-video rounded-xl border border-white/10 overflow-hidden relative group bg-black">

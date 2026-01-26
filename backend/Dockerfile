@@ -41,5 +41,5 @@ RUN mkdir -p /app/media/videos
 
 EXPOSE 8000
 
-# Use uvicorn with worker management
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--log-level", "info"]
+# Use uvicorn without explicit worker count
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]

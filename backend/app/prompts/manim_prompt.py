@@ -109,6 +109,8 @@ CRASH PREVENTION
 - Use fill_opacity NOT opacity for Dot, Circle, Square
 - Do NOT use config.frame_width/height in ThreeDScene
 - NO inline comments after code (use full-line comments only)
+- Master anti-crash engine: Create is better than ShowCreation
+- NO 'Gear' class - it does not exist in Manim CE. Use Circle or SVGMobject.
 - To center: use .move_to(ORIGIN) NOT .to_center()
 
 ====================================================

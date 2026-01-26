@@ -1,8 +1,15 @@
 'use client'
 
 import Image from 'next/image'
-import { Plus, Wand2, BookOpen, Clock, Settings, LogOut, Trash2, ChevronDown } from 'lucide-react'
+import { Plus, Wand2, BookOpen, Clock, Settings, LogOut, Trash2, ChevronDown, MoreHorizontal, Share, Pencil } from 'lucide-react'
 import { useAuth } from '@/components/providers/AuthProvider'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Sidebar,
   SidebarContent,
@@ -16,12 +23,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 
 interface Chat {
   id: string
@@ -37,6 +38,10 @@ interface AppSidebarProps {
   setActiveChatId: (id: string | null) => void
   handleNewChat: () => void
   handleDeleteChat: (e: React.MouseEvent, chatId: string) => void
+  deletingChatId: string | null
+  onConfirmDelete: () => void
+  onCancelDelete: () => void
+  isDeleting: boolean
 }
 
 export function AppSidebar({
@@ -47,6 +52,10 @@ export function AppSidebar({
   setActiveChatId,
   handleNewChat,
   handleDeleteChat,
+  deletingChatId,
+  onConfirmDelete,
+  onCancelDelete,
+  isDeleting,
 }: AppSidebarProps) {
   const { user, signOut } = useAuth()
   const { isMobile, setOpenMobile } = useSidebar()
@@ -154,14 +163,34 @@ export function AppSidebar({
                       >
                         <span className="truncate">{chat.title}</span>
                       </button>
-                      <button
-                        onClick={(e) => handleDeleteChat(e, chat.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 mr-1 hover:bg-red-500/10 rounded-md text-white/30 hover:text-red-400 transition-all"
-                        aria-label={`Delete ${chat.title}`}
-                        title={`Delete ${chat.title}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="opacity-0 group-hover:opacity-100 p-1.5 mr-1 hover:bg-white/5 rounded-md text-white/30 hover:text-white transition-all border border-transparent"
+                            aria-label="Chat options"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 bg-[#111] border-white/10 p-1">
+                          <DropdownMenuItem className="text-white/70 hover:text-white focus:bg-white/5 cursor-pointer flex items-center gap-2 py-2">
+                            <Share className="h-3.5 w-3.5" />
+                            Share
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-white/70 hover:text-white focus:bg-white/5 cursor-pointer flex items-center gap-2 py-2">
+                            <Pencil className="h-3.5 w-3.5" />
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-white/5" />
+                          <DropdownMenuItem
+                            onClick={(e) => handleDeleteChat(e, chat.id)}
+                            className="text-red-400 hover:text-red-300 focus:bg-red-500/10 cursor-pointer flex items-center gap-2 py-2"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </SidebarMenuItem>
                 ))

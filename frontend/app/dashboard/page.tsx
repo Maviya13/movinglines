@@ -20,6 +20,9 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/dashboard/AppSidebar';
+import { Header } from '@/components/landing/Header';
+import { AuthModal } from '@/components/AuthModal';
+import { DeleteConfirm } from '@/components/ui/DeleteConfirm';
 import { WorkspaceView } from '@/components/dashboard/WorkspaceView';
 import { HistoryView } from '@/components/dashboard/HistoryView';
 import { TemplatesView } from '@/components/dashboard/TemplatesView';
@@ -55,6 +58,11 @@ export default function DashboardPage() {
   const [wsConnected, setWsConnected] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [generatedCode, setGeneratedCode] = useState<string>('');
+
+  // Delete State
+  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [useImage, setUseImage] = useState(false);
 
@@ -143,21 +151,26 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeleteChat = async (e: React.MouseEvent, chatId: string) => {
+  const handleDeleteChat = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
-    if (!session?.access_token) return;
+    setDeletingChatId(chatId);
+  };
 
-    if (!confirm('Are you sure you want to delete this chat?')) return;
+  const handleConfirmDelete = async () => {
+    if (!deletingChatId || !session?.access_token) return;
 
+    setIsDeleting(true);
     try {
-      await deleteChat(chatId, session.access_token);
-      setChats(chats.filter(c => c.id !== chatId));
-      if (activeChatId === chatId) {
+      await deleteChat(deletingChatId, session.access_token);
+      setChats(chats.filter(c => c.id !== deletingChatId));
+      if (activeChatId === deletingChatId) {
         handleNewChat();
       }
+      setDeletingChatId(null);
     } catch (err) {
       console.error('Failed to delete chat:', err);
-      alert('Failed to delete chat');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -213,6 +226,7 @@ export default function DashboardPage() {
         handleTaskFailure(data);
       }
     });
+
 
     socket.on('connect_error', (err: any) => {
       // Reconnection logic handled by socket.io-client
@@ -343,6 +357,10 @@ export default function DashboardPage() {
         setActiveChatId={setActiveChatId}
         handleNewChat={handleNewChat}
         handleDeleteChat={handleDeleteChat}
+        deletingChatId={deletingChatId}
+        onConfirmDelete={handleConfirmDelete}
+        onCancelDelete={() => setDeletingChatId(null)}
+        isDeleting={isDeleting}
       />
       <SidebarInset className="h-svh overflow-hidden">
         <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-white/5 bg-[#0a0a0a] transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 px-4">
@@ -413,6 +431,15 @@ export default function DashboardPage() {
           <TemplatesView />
         )}
       </SidebarInset>
+      <AuthModal />
+      {deletingChatId && (
+        <DeleteConfirm
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingChatId(null)}
+          chatTitle={chats.find(c => c.id === deletingChatId)?.title || ''}
+          isLoading={isDeleting}
+        />
+      )}
     </SidebarProvider>
   );
 }

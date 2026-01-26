@@ -185,18 +185,48 @@ def get_user_chats_from_db(user_id: str):
     result = client.table("chats").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
     return result.data
 
-def delete_chat_from_db(chat_id: str, user_id: str) -> bool:
-    """Delete a chat session and its associated tasks."""
+async def delete_chat_from_db(chat_id: str, user_id: str) -> bool:
+    """Delete a chat session and ALL its associated resources (tasks, videos, storage)."""
     client = get_supabase()
+    bucket = os.getenv("SUPABASE_BUCKET", "manim-videos")
     
-    # Verify ownership
+    # 1. Verify ownership and fetch chat
     chat = client.table("chats").select("*").eq("id", chat_id).eq("user_id", user_id).single().execute()
-    
     if not chat.data:
         raise HTTPException(status_code=404, detail="Chat not found")
     
-    # Delete chat
+    # 2. Fetch all tasks associated with this chat
+    tasks_res = client.table("tasks").select("*").eq("chat_id", chat_id).execute()
+    tasks = tasks_res.data or []
+    
+    # 3. Cleanup videos and storage for each task
+    for task in tasks:
+        video_url = task.get("video_url")
+        if video_url:
+            # Find the video record to get the bucket path
+            video_res = client.table("videos").select("*").eq("video_url", video_url).eq("user_id", user_id).execute()
+            if video_res.data:
+                for video_rec in video_res.data:
+                    bucket_path = video_rec.get("bucket_path")
+                    if bucket_path:
+                        try:
+                            # Delete from storage
+                            client.storage.from_(bucket).remove([bucket_path])
+                            print(f"[Cleanup] Deleted storage file: {bucket_path}")
+                        except Exception as e:
+                            print(f"[Cleanup] Failed to delete storage file {bucket_path}: {e}")
+                    
+                    # Delete the video record
+                    client.table("videos").delete().eq("id", video_rec["id"]).execute()
+                    print(f"[Cleanup] Deleted video record: {video_rec['id']}")
+
+    # 4. Delete all tasks for this chat
+    client.table("tasks").delete().eq("chat_id", chat_id).execute()
+    print(f"[Cleanup] Deleted all tasks for chat: {chat_id}")
+    
+    # 5. Delete the chat itself
     client.table("chats").delete().eq("id", chat_id).execute()
+    print(f"[Cleanup] Deleted chat record: {chat_id}")
     
     return True
 

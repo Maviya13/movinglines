@@ -1,6 +1,7 @@
 """
 Manim script generation with RAG context from Pinecone.
 """
+import re
 import logging
 from langchain_core.messages import SystemMessage, HumanMessage
 
@@ -125,6 +126,10 @@ This is a VALIDATION REQUIREMENT. Code without ImageMobject will be REJECTED.
     
     # Master anti-crash engine
     code = apply_anticrash_rules(code)
+
+    # HALLUCINATION FALLBACKS
+    # Gear is not a built-in Manim CE class
+    code = re.sub(r"\bGear\b", "Circle", code)
     
     # IMAGE VALIDATION & AUTO-INJECTION
     if force_image and 'ImageMobject' not in code:
