@@ -27,6 +27,7 @@ export function Hero({ onLaunchAction }: { onLaunchAction: () => void }) {
       {/* Radial Glows */}
       <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] glow-effect pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] glow-effect pointer-events-none opacity-10" />
+      <div className="absolute inset-0 bg-linear-to-b from-blue-500/10 via-transparent to-transparent opacity-50" />
 
       <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center text-center space-y-8 animate-fade-in">
 
@@ -40,7 +41,7 @@ export function Hero({ onLaunchAction }: { onLaunchAction: () => void }) {
         </button>
 
         {/* Main Heading */}
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent pb-12 pt-4 leading-[1.4]">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium bg-linear-to-b from-white to-white/50 bg-clip-text text-transparent pb-12 pt-4 leading-[1.4]">
           The Vibe Coding Studio
         </h1>
 

@@ -23,7 +23,7 @@ export default function SettingsPage() {
 
                 <div className="card p-8 space-y-6">
                     <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-blue to-brand-orange flex items-center justify-center text-white font-bold text-2xl">
+                        <div className="h-12 w-12 rounded-xl bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-500/20">
                             {user?.email?.[0].toUpperCase()}
                         </div>
                         <div>

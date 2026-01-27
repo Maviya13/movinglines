@@ -21,7 +21,7 @@ export const metadataConfig: Metadata = {
         type: 'website',
         images: [
             {
-                url: '/social-preview.png',
+                url: 'https://movinglines.co.in/social-preview.png',
                 width: 1200,
                 height: 630,
                 alt: 'MovingLines - AI Animation Engine',
@@ -30,9 +30,10 @@ export const metadataConfig: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
+        site: '@piyushdhoka',
         title: 'MovingLines - Animation Engine',
         description: 'Transform complex mathematical concepts into beautiful animations using AI.',
-        images: ['/social-preview.png'],
+        images: ['https://movinglines.co.in/social-preview.png'],
         creator: '@piyushdhoka',
     },
 }

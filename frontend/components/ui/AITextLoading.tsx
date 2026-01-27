@@ -57,7 +57,7 @@ export default function AITextLoading({
                             },
                         }}
                         className={cn(
-                            "flex justify-center text-3xl font-bold bg-gradient-to-r from-neutral-950 via-neutral-400 to-neutral-950 dark:from-white dark:via-neutral-600 dark:to-white bg-[length:200%_100%] bg-clip-text text-transparent whitespace-nowrap min-w-max",
+                            "flex justify-center text-3xl font-bold bg-linear-to-r from-neutral-950 via-neutral-400 to-neutral-950 dark:from-white dark:via-neutral-600 dark:to-white bg-size-[200%_100%] bg-clip-text text-transparent whitespace-nowrap min-w-max",
                             className
                         )}
                     >

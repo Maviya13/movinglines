@@ -92,7 +92,7 @@ export function HeroVideoDialog({
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="flex size-20 items-center justify-center rounded-full bg-blue-600/10 backdrop-blur-md text-white shadow-xl transition-transform duration-300 group-hover:scale-110">
-                        <div className="flex size-16 items-center justify-center rounded-full bg-blue-600 shadow-lg outline outline-1 outline-blue-400">
+                        <div className="flex size-16 items-center justify-center rounded-full bg-blue-600 shadow-lg outline-1 outline-blue-400">
                             <Play className="size-8 fill-white" />
                         </div>
                     </div>
@@ -109,7 +109,7 @@ export function HeroVideoDialog({
                         <motion.div
                             {...selectedAnimation}
                             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                            className="relative w-full max-w-6xl aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-zinc-950"
+                            className="relative w-full max-w-6xl aspect-video rounded-2xl overflow-hidden border border-white/10 bg-zinc-950 outline shadow-2xl"
                         >
                             <button
                                 onClick={() => setIsOpen(false)}

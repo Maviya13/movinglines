@@ -51,7 +51,7 @@ export function Viewport({
   return (
     <div className={`${mobileTab === 'output' ? 'flex' : 'hidden'} md:flex flex-1 flex-col bg-[#0a0a0a] min-h-0 relative`}>
       {/* Tab Bar */}
-      <div className="h-12 border-b border-white/5 flex px-6 items-center flex-shrink-0">
+      <div className="h-12 border-b border-white/5 flex px-6 items-center shrink-0">
         <div className="flex items-center gap-6 flex-1 h-full">
           <button
             onClick={() => setActiveTab('viewport')}
